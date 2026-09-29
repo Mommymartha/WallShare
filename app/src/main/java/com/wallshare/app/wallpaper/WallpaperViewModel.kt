@@ -40,7 +40,14 @@ class WallpaperViewModel(
         viewModelScope.launch {
             try {
                 val friends = friendsRepository.fetchFriends()
-                _uiState.update { it.copy(isLoadingFriends = false, friends = friends) }
+                _uiState.update {
+                    it.copy(
+                        isLoadingFriends = false,
+                        friends = friends,
+                        // Auto-select when there is only one friend
+                        selectedFriend = if (friends.size == 1) friends.first() else it.selectedFriend
+                    )
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Failed to load friends for wallpaper picker", e)
                 _uiState.update {

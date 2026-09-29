@@ -128,7 +128,6 @@ fun SendWallpaperScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding()
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.Bottom
         ) {
@@ -255,11 +254,22 @@ fun SendWallpaperScreen(
         }
         
         state.errorMessage?.let { error ->
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 48.dp)
-            )
+            Card(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = 24.dp, end = 24.dp, bottom = 96.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
+                )
+            ) {
+                Text(
+                    text = error,
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                )
+            }
         }
     }
 }

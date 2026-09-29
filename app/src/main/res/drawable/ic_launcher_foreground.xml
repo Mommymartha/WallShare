@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Placeholder mark: a simple circle, safely inside the adaptive-icon
+         mask zone (roughly the inner 66dp of the 108dp canvas). Swap this
+         path for real branding whenever design assets are ready - nothing
+         else needs to change. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,30 A24,24 0 1 1 53.99,30 Z" />
+</vector>

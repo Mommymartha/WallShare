@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "581640569863",
+    "project_id": "wallshare-89802",
+    "storage_bucket": "wallshare-89802.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581640569863:android:bf76868343394437fa96a2",
+        "android_client_info": {
+          "package_name": "com.wallshare.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIAVZjfRZb8T6eBqVX47iioe_4iCKrW_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -16,6 +16,7 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.wallshare.app.wallpaper.WallpaperWorker
 import androidx.work.ExistingWorkPolicy
+import androidx.work.OutOfQuotaPolicy
 
 private const val TAG = "WallShareMessaging"
 
@@ -76,6 +77,7 @@ class WallShareMessagingService : FirebaseMessagingService() {
                     .setRequiredNetworkType(NetworkType.CONNECTED)
                     .build(),
             )
+            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
             .build()
 
         WorkManager.getInstance(applicationContext).enqueueUniqueWork(

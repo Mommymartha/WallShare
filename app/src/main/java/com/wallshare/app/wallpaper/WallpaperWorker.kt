@@ -33,7 +33,28 @@ class WallpaperWorker(
 
         val container = (applicationContext as WallShareApplication).container
         val wallpaperRepository = container.wallpaperRepository
-        val currentUserId = container.supabase.auth.currentUserOrNull()?.id
+        val auth = container.supabase.auth
+
+        // When the OS wakes the app from a killed state to run this worker,
+        // Supabase Auth hasn't loaded the persisted session from disk yet.
+        // Without this, currentUserOrNull() returns null and the worker
+        // endlessly retries. This suspend call waits for the session to load.
+        auth.awaitInitialization()
+
+        // If the access token has expired since last use, refresh it so the
+        // Postgrest/Storage calls below don't fail with a 401.
+        val sessionStatus = auth.sessionStatus.value
+        if (sessionStatus is io.github.jan.supabase.auth.status.SessionStatus.NotAuthenticated ||
+            sessionStatus is io.github.jan.supabase.auth.status.SessionStatus.RefreshFailure
+        ) {
+            try {
+                auth.refreshCurrentSession()
+            } catch (e: Exception) {
+                Log.w(TAG, "Session refresh failed for request $requestId", e)
+            }
+        }
+
+        val currentUserId = auth.currentUserOrNull()?.id
         if (currentUserId == null) {
             Log.w(TAG, "No signed-in user - retrying wallpaper request $requestId")
             return Result.retry()

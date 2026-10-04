@@ -1,6 +1,10 @@
 package com.wallshare.app
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -65,6 +69,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.wallshare.app.wallpaper.WallpaperForegroundService
 import com.wallshare.app.wallpaper.WallpaperWorker
 
 /**
@@ -75,6 +80,42 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Request POST_NOTIFICATIONS permission on Android 13+ (API 33).
+        // Without this runtime grant, only foreground service notifications
+        // are shown — all other notifications (including our debug/status
+        // notifications) are silently dropped by the OS.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissions(
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    1001
+                )
+            }
+        }
+
+        // Prompt the user to exempt WallShare from battery optimization so
+        // background FCM pushes can wake the app and apply wallpapers even
+        // when the UI isn't open. This only shows the system dialog once —
+        // after the user grants it, isIgnoringBatteryOptimizations returns
+        // true and this block is skipped on subsequent launches.
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            startActivity(
+                Intent(
+                    Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Uri.parse("package:$packageName")
+                )
+            )
+        }
+
+        // Start the foreground service IMMEDIATELY from onCreate() where
+        // we are guaranteed to be in a foreground state. Starting from a
+        // LaunchedEffect coroutine can race with Compose lifecycle and
+        // miss the foreground window on some OEMs (Motorola, Xiaomi, etc.).
+        WallpaperForegroundService.start(this)
 
         setContent {
             WallShareTheme {

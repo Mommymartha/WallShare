@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Networking to Supabase. ACCESS_NETWORK_STATE is intentionally omitted - nothing
-         in the current scaffold inspects connectivity state. Add it back only when a
-         real feature (e.g. a connectivity-aware retry check) needs it. -->
     <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- Required to actually change the device wallpaper -->
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
-
-    <!-- Required on Android 13+ if we ever show a "wallpaper updated" notification -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Foreground service to keep the app alive for wallpaper polling -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".WallShareApplication"
@@ -31,18 +31,6 @@
             </intent-filter>
         </activity>
 
-        <!--
-          Receives FCM data messages when Android's background-delivery rules permit it
-          (Scenarios 4 & 5 in the normal case). This is NOT a guarantee: a force-stopped
-          app, or aggressive OEM battery management, can delay or drop delivery entirely
-          until the app is next opened. The backend (Supabase) remains the source of
-          truth - a startup/foreground reconciliation check that fetches any still-PENDING
-          wallpaper_request is required to cover that gap (planned for a later step, not
-          implemented in this scaffold). This service does NOT do the wallpaper work
-          itself - it hands off to WorkManager so we never block onMessageReceived and
-          always respect background execution limits. See
-          notifications/WallShareMessagingService.kt.
-        -->
         <service
             android:name=".notifications.WallShareMessagingService"
             android:exported="false">
@@ -51,5 +39,24 @@
             </intent-filter>
         </service>
 
+        <!-- Foreground service that polls for wallpaper changes.
+             stopWithTask=false keeps it alive when the user swipes from recents. -->
+        <service
+            android:name=".wallpaper.WallpaperForegroundService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Restart the foreground service after device reboot -->
+        <receiver
+            android:name=".notifications.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
     </application>
 </manifest>
+

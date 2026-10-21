@@ -1,6 +1,7 @@
 package com.wallshare.app.notifications
 
 import android.os.Build
+import android.util.Log
 import com.google.firebase.messaging.FirebaseMessaging
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.postgrest
@@ -9,6 +10,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+
+private const val TAG = "DeviceRepository"
 
 /**
  * Owns FCM token retrieval and its registration into the `devices` table.
@@ -34,9 +37,18 @@ class DeviceRepository(private val supabase: SupabaseClient) {
      */
     suspend fun registerCurrentFcmToken(): Result<Unit> {
         return try {
+            Log.d(TAG, "Fetching current FCM token from Firebase...")
             val token = fetchCurrentFcmToken()
-            registerDevice(token)
+            Log.d(TAG, "FCM token obtained (${token.take(12)}...${token.takeLast(6)}), registering with Supabase...")
+            val result = registerDevice(token)
+            if (result.isSuccess) {
+                Log.d(TAG, "✅ Device registered successfully in Supabase devices table")
+            } else {
+                Log.e(TAG, "❌ Supabase register_device RPC failed", result.exceptionOrNull())
+            }
+            result
         } catch (e: Exception) {
+            Log.e(TAG, "❌ Failed to fetch FCM token from Firebase", e)
             Result.failure(e)
         }
     }
@@ -54,6 +66,7 @@ class DeviceRepository(private val supabase: SupabaseClient) {
             )
             Result.success(Unit)
         } catch (e: Exception) {
+            Log.e(TAG, "register_device RPC threw: ${e.javaClass.simpleName}: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -69,6 +82,7 @@ class DeviceRepository(private val supabase: SupabaseClient) {
         fcm.token
             .addOnSuccessListener { token -> continuation.resume(token) }
             .addOnFailureListener { e ->
+                Log.w(TAG, "Firebase token fetch failed: ${e.javaClass.simpleName}: ${e.message}")
                 // If the local cache is jammed/rate-limited, nuke it and try one more time
                 if (e.message?.contains("TOO_MANY_REGISTRATIONS") == true) {
                     Thread {
@@ -86,4 +100,4 @@ class DeviceRepository(private val supabase: SupabaseClient) {
                 }
             }
     }
-}
+}

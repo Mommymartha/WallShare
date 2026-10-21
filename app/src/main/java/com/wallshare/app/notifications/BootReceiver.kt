@@ -4,16 +4,23 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import com.wallshare.app.wallpaper.WallpaperForegroundService
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.wallshare.app.wallpaper.WallpaperPollWorker
+import java.util.concurrent.TimeUnit
 
 private const val TAG = "BootReceiver"
 
 /**
- * Restarts the foreground service after the device reboots.
+ * Ensures the periodic poll worker is scheduled after device reboot.
  *
- * Without this, a reboot kills the foreground service and nothing recreates
- * it until the user manually opens the app. START_STICKY only helps when the
- * OS kills the service for memory — it does NOT survive a full reboot.
+ * WorkManager itself persists scheduled work across reboots, but some OEMs
+ * (Xiaomi, Huawei) can wipe WorkManager's internal database during their
+ * own "cleanup" passes. This receiver re-enqueues with KEEP policy so it's
+ * a no-op if the schedule already exists — belt-and-suspenders.
  *
  * We also check for the QUICKBOOT_POWERON action used by some OEM fast-boot
  * implementations (HTC, some Xiaomi models).
@@ -24,8 +31,21 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
             intent.action == "android.intent.action.QUICKBOOT_POWERON"
         ) {
-            Log.d(TAG, "Device booted — restarting WallpaperForegroundService")
-            WallpaperForegroundService.start(context)
+            Log.d(TAG, "Device booted — ensuring periodic poll worker is scheduled")
+
+            val periodicPoll = PeriodicWorkRequestBuilder<WallpaperPollWorker>(
+                15, TimeUnit.MINUTES,
+            ).setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build(),
+            ).build()
+
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                WallpaperPollWorker.UNIQUE_WORK_NAME,
+                ExistingPeriodicWorkPolicy.KEEP,
+                periodicPoll,
+            )
         }
     }
 }

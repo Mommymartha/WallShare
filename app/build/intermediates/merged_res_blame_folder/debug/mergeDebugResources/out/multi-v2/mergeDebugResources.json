@@ -7854,6 +7854,23 @@
                     }
                 },
                 {
+                    "source": "C:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\src\\main\\res\\values\\strings.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endColumns": "46",
+                        "endOffsets": "58"
+                    },
+                    "to": {
+                        "startLines": "127",
+                        "startColumns": "4",
+                        "startOffsets": "8005",
+                        "endColumns": "46",
+                        "endOffsets": "8047"
+                    }
+                },
+                {
                     "source": "C:\\Users\\Shavez Ali\\.gradle\\caches\\8.13\\transforms\\a40567d2e0c851ecc182afff68118d75\\transformed\\browser-1.8.0\\res\\values\\values.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11",
@@ -7926,6 +7943,23 @@
                     }
                 },
                 {
+                    "source": "C:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\src\\main\\res\\values\\themes.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endColumns": "86",
+                        "endOffsets": "98"
+                    },
+                    "to": {
+                        "startLines": "284",
+                        "startColumns": "4",
+                        "startOffsets": "19772",
+                        "endColumns": "85",
+                        "endOffsets": "19853"
+                    }
+                },
+                {
                     "source": "C:\\Users\\Shavez Ali\\.gradle\\caches\\8.13\\transforms\\571ba8c45efe365a72dccf04f308de9e\\transformed\\play-services-basement-18.3.0\\res\\values\\values.xml",
                     "from": {
                         "startLines": "4,7",
@@ -7960,23 +7994,6 @@
                     }
                 },
                 {
-                    "source": "D:\\project\\project\\WallShare\\app\\build\\generated\\res\\processDebugGoogleServices\\values\\values.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "55,137,241,350,470,577",
-                        "endColumns": "81,103,108,119,106,75",
-                        "endOffsets": "132,236,345,465,572,648"
-                    },
-                    "to": {
-                        "startLines": "163,164,165,166,167,233",
-                        "startColumns": "4,4,4,4,4,4",
-                        "startOffsets": "11605,11687,11791,11900,12020,16796",
-                        "endColumns": "81,103,108,119,106,75",
-                        "endOffsets": "11682,11786,11895,12015,12122,16867"
-                    }
-                },
-                {
                     "source": "C:\\Users\\Shavez Ali\\.gradle\\caches\\8.13\\transforms\\9fe5a02d000d7b4213232abf17f526a1\\transformed\\lifecycle-runtime-release\\res\\values\\values.xml",
                     "from": {
                         "startLines": "2",
@@ -7994,20 +8011,20 @@
                     }
                 },
                 {
-                    "source": "D:\\project\\project\\WallShare\\app\\src\\main\\res\\values\\strings.xml",
+                    "source": "C:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\generated\\res\\processDebugGoogleServices\\values\\values.xml",
                     "from": {
-                        "startLines": "1",
-                        "startColumns": "4",
-                        "startOffsets": "16",
-                        "endColumns": "46",
-                        "endOffsets": "58"
+                        "startLines": "2,3,4,5,6,7",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "55,137,241,350,470,577",
+                        "endColumns": "81,103,108,119,106,75",
+                        "endOffsets": "132,236,345,465,572,648"
                     },
                     "to": {
-                        "startLines": "127",
-                        "startColumns": "4",
-                        "startOffsets": "8005",
-                        "endColumns": "46",
-                        "endOffsets": "8047"
+                        "startLines": "163,164,165,166,167,233",
+                        "startColumns": "4,4,4,4,4,4",
+                        "startOffsets": "11605,11687,11791,11900,12020,16796",
+                        "endColumns": "81,103,108,119,106,75",
+                        "endOffsets": "11682,11786,11895,12015,12122,16867"
                     }
                 },
                 {
@@ -8114,23 +8131,6 @@
                         "endLines": "122,170,171,172,173,174,175,176,177,178,181,182,183,184,185,186,187,188,189,190,191,194,195,196,197,198,199,200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,258,261",
                         "endColumns": "72,87,85,80,83,68,64,82,105,85,13,53,68,60,68,88,94,73,96,92,97,13,90,87,95,97,63,67,86,93,66,71,71,100,108,75,68,47,65,63,73,56,56,71,49,53,70,70,69,68,57,75,70,73,85,49,69,64,12,12",
                         "endOffsets": "7681,12322,12408,12489,12573,12642,12707,12790,12896,12982,13102,13156,13225,13286,13355,13444,13539,13613,13710,13803,13901,14050,14141,14229,14325,14423,14487,14555,14642,14736,14803,14875,14947,15048,15157,15233,15302,15350,15416,15480,15554,15611,15668,15740,15790,15844,15915,15986,16056,16125,16183,16259,16330,16404,16490,16540,16610,16675,18327,18480"
-                    }
-                },
-                {
-                    "source": "D:\\project\\project\\WallShare\\app\\src\\main\\res\\values\\themes.xml",
-                    "from": {
-                        "startLines": "1",
-                        "startColumns": "4",
-                        "startOffsets": "16",
-                        "endColumns": "86",
-                        "endOffsets": "98"
-                    },
-                    "to": {
-                        "startLines": "284",
-                        "startColumns": "4",
-                        "startOffsets": "19772",
-                        "endColumns": "85",
-                        "endOffsets": "19853"
                     }
                 },
                 {

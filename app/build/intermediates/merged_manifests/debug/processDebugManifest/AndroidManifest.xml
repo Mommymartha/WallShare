@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
-    <!-- Foreground service to keep the app alive for wallpaper polling -->
+    <!-- WorkManager uses a short-lived foreground service for expedited work on Android < 12 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
@@ -58,17 +58,7 @@
             </intent-filter>
         </service>
 
-        <!--
-             Foreground service that polls for wallpaper changes.
-             stopWithTask=false keeps it alive when the user swipes from recents.
-        -->
-        <service
-            android:name="com.wallshare.app.wallpaper.WallpaperForegroundService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync"
-            android:stopWithTask="false" />
-
-        <!-- Restart the foreground service after device reboot -->
+        <!-- Restart the periodic poll worker after device reboot -->
         <receiver
             android:name="com.wallshare.app.notifications.BootReceiver"
             android:exported="false" >
@@ -77,6 +67,19 @@
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
+
+        <!--
+             WorkManager's SystemForegroundService needs a foreground service type
+             declared in the manifest on API 34+. Without this, expedited work that
+             falls back to a foreground service crashes with
+             MissingForegroundServiceTypeException.
+        -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:directBootAware="false"
+            android:enabled="@bool/enable_system_foreground_service_default"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
 
         <provider
             android:name="androidx.startup.InitializationProvider"
@@ -116,11 +119,6 @@
             android:enabled="@bool/enable_system_job_service_default"
             android:exported="true"
             android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
-            android:name="androidx.work.impl.foreground.SystemForegroundService"
-            android:directBootAware="false"
-            android:enabled="@bool/enable_system_foreground_service_default"
-            android:exported="false" />
 
         <receiver
             android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver"

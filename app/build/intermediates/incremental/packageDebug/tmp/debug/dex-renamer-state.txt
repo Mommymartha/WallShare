@@ -1,17 +1,17 @@
-#Sun Oct 04 08:12:45 IST 2026
-base.0=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
-base.1=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
-base.10=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\9\\classes.dex
-base.11=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes2.dex
-base.12=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes3.dex
-base.2=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\10\\classes.dex
-base.3=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\12\\classes.dex
-base.4=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\13\\classes.dex
-base.5=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\14\\classes.dex
-base.6=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\2\\classes.dex
-base.7=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\4\\classes.dex
-base.8=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\6\\classes.dex
-base.9=D\:\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\7\\classes.dex
+#Wed Oct 21 20:38:34 IST 2026
+base.0=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
+base.1=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
+base.10=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\9\\classes.dex
+base.11=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes2.dex
+base.12=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes3.dex
+base.2=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\10\\classes.dex
+base.3=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\12\\classes.dex
+base.4=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\13\\classes.dex
+base.5=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\14\\classes.dex
+base.6=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\2\\classes.dex
+base.7=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\4\\classes.dex
+base.8=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\6\\classes.dex
+base.9=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\7\\classes.dex
 path.0=classes.dex
 path.1=0/classes.dex
 path.10=9/classes.dex

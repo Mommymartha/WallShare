@@ -69,7 +69,6 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.wallshare.app.wallpaper.WallpaperForegroundService
 import com.wallshare.app.wallpaper.WallpaperWorker
 
 /**
@@ -111,11 +110,7 @@ class MainActivity : ComponentActivity() {
             )
         }
 
-        // Start the foreground service IMMEDIATELY from onCreate() where
-        // we are guaranteed to be in a foreground state. Starting from a
-        // LaunchedEffect coroutine can race with Compose lifecycle and
-        // miss the foreground window on some OEMs (Motorola, Xiaomi, etc.).
-        WallpaperForegroundService.start(this)
+
 
         setContent {
             WallShareTheme {

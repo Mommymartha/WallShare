@@ -3,11 +3,12 @@ package com.wallshare.app
 import android.app.Application
 import android.util.Log
 import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
+import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.wallshare.app.wallpaper.WallpaperPollWorker
+import java.util.concurrent.TimeUnit
 
 class WallShareApplication : Application() {
     lateinit var container: AppContainer
@@ -19,33 +20,31 @@ class WallShareApplication : Application() {
     }
 
     /**
-     * Kicks off the first poll immediately. After it runs, the worker
-     * reschedules itself with a delay — creating a perpetual polling loop
-     * that survives app kills and reboots.
+     * Enqueues a periodic poll that runs every 15 minutes. This is the
+     * FALLBACK behind FCM push — if a push is dropped or delayed by an
+     * aggressive OEM battery skin, the poll picks it up within 15 minutes.
      *
-     * This is the FALLBACK behind WallpaperForegroundService (which does
-     * its own, more frequent polling). If the foreground service is alive,
-     * this poll rarely finds anything to do, but it covers the edge case
-     * where an aggressive OEM battery skin kills the foreground service.
+     * KEEP policy means if a schedule already exists (e.g. from a previous
+     * app launch or a BootReceiver trigger), it is left alone — no duplicate
+     * scheduling, no timer reset.
      *
-     * REPLACE policy ensures opening the app always resets the poll timer,
-     * preventing a stale delayed poll from the previous cycle from lingering.
+     * WorkManager guarantees this survives process kills and reboots.
      */
     private fun schedulePollWorker() {
-        val initialPoll = OneTimeWorkRequestBuilder<WallpaperPollWorker>()
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build(),
-            )
-            .build()
+        val periodicPoll = PeriodicWorkRequestBuilder<WallpaperPollWorker>(
+            15, TimeUnit.MINUTES,
+        ).setConstraints(
+            Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build(),
+        ).build()
 
-        WorkManager.getInstance(this).enqueueUniqueWork(
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             WallpaperPollWorker.UNIQUE_WORK_NAME,
-            ExistingWorkPolicy.REPLACE,
-            initialPoll,
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicPoll,
         )
 
-        Log.d("WallShareApp", "Wallpaper poll worker scheduled")
+        Log.d("WallShareApp", "Periodic wallpaper poll worker scheduled (15 min)")
     }
 }

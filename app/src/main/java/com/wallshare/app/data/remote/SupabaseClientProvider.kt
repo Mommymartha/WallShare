@@ -1,9 +1,11 @@
 package com.wallshare.app.data.remote
 
 import android.content.Context
+import com.russhwolf.settings.SharedPreferencesSettings
 import com.wallshare.app.BuildConfig
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.auth.SettingsSessionManager
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
@@ -22,13 +24,27 @@ import io.github.jan.supabase.storage.Storage
  */
 object SupabaseClientProvider {
 
-    fun create(context: Context): SupabaseClient = createSupabaseClient(
-        supabaseUrl = BuildConfig.SUPABASE_URL,
-        supabaseKey = BuildConfig.SUPABASE_ANON_KEY,
-    ) {
-        install(Auth)
-        install(Postgrest)
-        install(Storage)
-        install(Realtime) // used later for live online/offline + friend-request updates
+    fun create(context: Context): SupabaseClient {
+        // Explicitly bind session storage to SharedPreferences via applicationContext.
+        // On some OEM devices (Xiaomi, Vivo), background worker threads fail to resolve
+        // the default multiplatform settings context. Pinning it here ensures the
+        // persisted session (including the refresh token) is always readable during
+        // cold wakeups from FCM / WorkManager.
+        val appContext = context.applicationContext
+        val sessionSettings = SharedPreferencesSettings(
+            appContext.getSharedPreferences("supabase_auth_session", Context.MODE_PRIVATE)
+        )
+
+        return createSupabaseClient(
+            supabaseUrl = BuildConfig.SUPABASE_URL,
+            supabaseKey = BuildConfig.SUPABASE_ANON_KEY,
+        ) {
+            install(Auth) {
+                sessionManager = SettingsSessionManager(sessionSettings)
+            }
+            install(Postgrest)
+            install(Storage)
+            install(Realtime) // used later for live online/offline + friend-request updates
+        }
     }
 }

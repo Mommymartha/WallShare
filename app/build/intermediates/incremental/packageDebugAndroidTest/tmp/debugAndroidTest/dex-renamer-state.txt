@@ -1,0 +1,7 @@
+#Wed Oct 21 20:55:20 IST 2026
+base.0=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\0\\classes.dex
+base.1=C\:\\Users\\Shavez Ali\\OneDrive\\Documents\\project\\project\\WallShare\\app\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\6\\classes.dex
+path.0=0/classes.dex
+path.1=6/classes.dex
+renamed.0=classes.dex
+renamed.1=classes2.dex

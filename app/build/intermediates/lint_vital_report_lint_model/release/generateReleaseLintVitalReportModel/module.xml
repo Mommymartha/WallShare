@@ -1,0 +1,19 @@
+<lint-module
+    format="1"
+    dir="C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app"
+    name=":app"
+    type="APP"
+    maven="WallShare:app:unspecified"
+    agpVersion="8.6.1"
+    buildFolder="build"
+    bootClassPath="C:\AndroidSDK\platforms\android-35\android.jar;C:\AndroidSDK\build-tools\34.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-35"
+    neverShrinking="true">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

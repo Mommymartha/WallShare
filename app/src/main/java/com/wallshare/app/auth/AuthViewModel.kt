@@ -133,14 +133,31 @@ class AuthViewModel(
                 _signInError.value = "Username and password cannot be empty."
                 return@launch
             }
+            if (pass.length < 6) {
+                _signInError.value = "Password must be at least 6 characters."
+                return@launch
+            }
             _signInError.value = null
             _state.value = AuthState.Loading
             try {
                 authRepository.signUpWithUsername(username, pass)
-                // Auto-claim the username so they bypass the NeedsUsername screen
-                val result = authRepository.claimUsername(username)
-                if (result.isFailure) {
-                    Log.w(TAG, "Username auto-claim failed during signup", result.exceptionOrNull())
+
+                // The handle_new_user() trigger creates the profile row, but
+                // there can be a brief race between the auth row appearing and
+                // the trigger completing. Retry claim_username a few times
+                // with a short delay to absorb that.
+                var claimResult: Result<Unit>? = null
+                for (attempt in 1..3) {
+                    kotlinx.coroutines.delay(500L * attempt)
+                    claimResult = authRepository.claimUsername(username)
+                    if (claimResult.isSuccess) break
+                    Log.w(TAG, "claim_username attempt $attempt failed", claimResult.exceptionOrNull())
+                }
+
+                if (claimResult?.isFailure == true) {
+                    Log.w(TAG, "All claim_username attempts failed", claimResult.exceptionOrNull())
+                    // Still proceed — the user will land on NeedsUsername screen
+                    // where they can retry manually.
                 }
                 refreshProfileState()
             } catch (e: Exception) {

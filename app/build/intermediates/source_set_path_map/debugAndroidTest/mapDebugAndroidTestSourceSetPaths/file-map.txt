@@ -1,0 +1,4 @@
+com.wallshare.app.test.app-androidTest-0 C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\build\generated\res\resValues\androidTest\debug
+com.wallshare.app.test.app-mergeDebugAndroidTestResources-1 C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
+com.wallshare.app.test.app-mergeDebugAndroidTestResources-2 C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
+com.wallshare.app.test.app-debugAndroidTest-3 C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

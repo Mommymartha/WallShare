@@ -125,4 +125,16 @@ class WallpaperRepository(private val supabase: SupabaseClient) {
             Result.failure(e)
         }
     }
+
+    /**
+     * Deletes an image from storage after it has been applied to avoid piling up files in Supabase Storage.
+     */
+    suspend fun deleteImage(imagePath: String): Result<Unit> {
+        return try {
+            supabase.storage.from("wallpapers").delete(listOf(imagePath))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

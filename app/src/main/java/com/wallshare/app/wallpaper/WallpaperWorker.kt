@@ -175,7 +175,58 @@ class WallpaperWorker(
             return Result.success()
         }
 
-        // 1. Claim the request if it's new
+        // 1. Check user preferences for auto-apply on Home and Lock screens
+        val settings = container.wallpaperPreferences.getSettings()
+        val allowHome = settings.autoApplyHome
+        val allowLock = settings.autoApplyLock
+
+        // Determine which screen(s) are allowed to be updated
+        val which: Int? = when (request.target) {
+            "HOME" -> if (allowHome) WallpaperManager.FLAG_SYSTEM else null
+            "LOCK" -> if (allowLock) WallpaperManager.FLAG_LOCK else null
+            "BOTH" -> when {
+                allowHome && allowLock -> WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
+                allowHome -> WallpaperManager.FLAG_SYSTEM
+                allowLock -> WallpaperManager.FLAG_LOCK
+                else -> null
+            }
+            else -> null
+        }
+
+        if (which == null) {
+            Log.d(TAG, "Wallpaper update for request $requestId skipped: blocked by user settings (target=${request.target}, home=$allowHome, lock=$allowLock)")
+            // Mark request COMPLETED so it isn't repeatedly retried
+            wallpaperRepository.updateStatus(requestId, "COMPLETED")
+            // Clean up image from storage
+            try {
+                wallpaperRepository.deleteImage(request.image_path)
+            } catch (e: Exception) {
+                Log.w(TAG, "Storage cleanup non-fatal error for $requestId", e)
+            }
+
+            try {
+                createResultChannel()
+                val targetLabel = when (request.target) {
+                    "HOME" -> "home screen"
+                    "LOCK" -> "lock screen"
+                    "BOTH" -> "home & lock screens"
+                    else -> "wallpaper"
+                }
+                val skippedNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
+                    .setContentTitle("Wallpaper received (Paused)")
+                    .setContentText("A wallpaper was received, but auto-apply for $targetLabel is turned off in your settings.")
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setAutoCancel(true)
+                    .build()
+                applicationContext.getSystemService(NotificationManager::class.java)
+                    .notify(RESULT_NOTIFICATION_ID, skippedNotification)
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not post skipped notification", e)
+            }
+            return Result.success()
+        }
+
+        // 2. Claim the request if it's new
         if (request.status == "PENDING") {
             val processingResult = wallpaperRepository.updateStatus(requestId, "PROCESSING")
             if (processingResult.isFailure) {
@@ -186,7 +237,7 @@ class WallpaperWorker(
             return Result.success() // Defensive check
         }
 
-        // 2. Download with retry logic
+        // 3. Download with retry logic
         val imageBytes = try {
             wallpaperRepository.downloadImage(request.image_path)
         } catch (e: Exception) {
@@ -194,7 +245,7 @@ class WallpaperWorker(
             return Result.retry()
         }
 
-        // 3. Decode image (Terminal failure if corrupt)
+        // 4. Decode image (Terminal failure if corrupt)
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
         if (bitmap == null) {
             Log.e(TAG, "Could not decode downloaded image for request $requestId")
@@ -202,7 +253,7 @@ class WallpaperWorker(
             return Result.failure()
         }
 
-        // 4. Apply Wallpaper
+        // 5. Apply Wallpaper
         // Some devices/OEMs silently drop setBitmap() when the screen is off
         // or the process is in the background. Acquiring a partial wake lock
         // for the duration of the call ensures the CPU stays awake long enough
@@ -218,15 +269,6 @@ class WallpaperWorker(
             wakeLock.acquire(30_000L) // 30 second timeout safety net
 
             val wallpaperManager = WallpaperManager.getInstance(applicationContext)
-            val which = when (request.target) {
-                "HOME" -> WallpaperManager.FLAG_SYSTEM
-                "LOCK" -> WallpaperManager.FLAG_LOCK
-                "BOTH" -> WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
-                else -> {
-                    wallpaperRepository.updateStatus(requestId, "FAILED")
-                    return Result.failure()
-                }
-            }
 
             // Retry up to 3 times with a short delay — some devices need a
             // moment after a cold wake before the wallpaper service is ready.
@@ -251,28 +293,35 @@ class WallpaperWorker(
             if (wakeLock.isHeld) wakeLock.release()
         }
 
-        // 5. Final Status Update
+        // 6. Final Status Update
         val completedResult = wallpaperRepository.updateStatus(requestId, "COMPLETED")
         if (completedResult.isFailure) {
             Log.w(TAG, "Wallpaper applied but failed to mark request as COMPLETED - retrying")
             return Result.retry()
         }
 
-        // 6. Post a user-visible notification confirming the wallpaper was applied.
-        // This also helps maintain the app's FCM high-priority quota - Play Services
-        // expects a user-visible side-effect when a high-priority data message wakes
-        // the app. Without this, future pushes get downgraded to normal priority.
+        // 7. Clean up image from Supabase Storage so old wallpapers do not accumulate
+        try {
+            wallpaperRepository.deleteImage(request.image_path)
+            Log.d(TAG, "Cleaned up storage image ${request.image_path} after applying")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to clean up storage image ${request.image_path} (non-fatal)", e)
+        }
+
+        // 8. Post a user-visible notification confirming the wallpaper was applied.
         try {
             createResultChannel()
-            val targetLabel = when (request.target) {
-                "HOME" -> "home screen"
-                "LOCK" -> "lock screen"
-                "BOTH" -> "home & lock screen"
+            val targetLabel = when {
+                request.target == "BOTH" && !allowLock -> "home screen (lock screen paused)"
+                request.target == "BOTH" && !allowHome -> "lock screen (home screen paused)"
+                which == (WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) -> "home & lock screens"
+                which == WallpaperManager.FLAG_SYSTEM -> "home screen"
+                which == WallpaperManager.FLAG_LOCK -> "lock screen"
                 else -> "wallpaper"
             }
             val resultNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
                 .setContentTitle("New wallpaper applied! \uD83C\uDF1F")
-                .setContentText("Your $targetLabel wallpaper was just updated")
+                .setContentText("Your $targetLabel was just updated")
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setAutoCancel(true)
                 .build()

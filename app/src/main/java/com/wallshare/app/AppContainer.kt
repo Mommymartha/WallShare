@@ -24,6 +24,7 @@ class AppContainer(context: Context) {
     private val credentialManager = CredentialManager.create(context)
 
     val authRepository by lazy { AuthRepository(supabase, credentialManager) }
+    val wallpaperPreferences by lazy { com.wallshare.app.wallpaper.WallpaperPreferences(context) }
 
     // Repositories are added here in Steps 4-6, e.g.:
     // val friendsRepository by lazy { FriendsRepository(supabase) }

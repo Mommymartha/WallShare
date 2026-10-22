@@ -116,7 +116,10 @@ fun FriendsScreen(viewModel: FriendsViewModel) {
             modifier = Modifier.weight(1f)
         ) { tab ->
             when (tab) {
-                FriendsTab.FRIENDS -> FriendsListTab(state)
+                FriendsTab.FRIENDS -> FriendsListTab(
+                    state = state,
+                    onRemoveFriend = viewModel::onRemoveFriend,
+                )
                 FriendsTab.REQUESTS -> RequestsTab(
                     state = state,
                     onAccept = viewModel::onAcceptRequest,
@@ -135,7 +138,10 @@ fun FriendsScreen(viewModel: FriendsViewModel) {
 }
 
 @Composable
-private fun FriendsListTab(state: FriendsUiState) {
+private fun FriendsListTab(
+    state: FriendsUiState,
+    onRemoveFriend: (com.wallshare.app.friends.Friend) -> Unit,
+) {
     when {
         state.isLoadingFriends -> {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -171,7 +177,10 @@ private fun FriendsListTab(state: FriendsUiState) {
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
                 items(state.friends, key = { it.friendshipId }) { friend ->
-                    FriendListItem(friend = friend)
+                    FriendListItem(
+                        friend = friend,
+                        onRemove = { onRemoveFriend(friend) },
+                    )
                 }
             }
         }

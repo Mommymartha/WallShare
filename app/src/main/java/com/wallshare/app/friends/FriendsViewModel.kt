@@ -106,6 +106,26 @@ class FriendsViewModel(
 
     fun onRejectRequest(requestId: String) = respond(requestId, accept = false)
 
+    fun onRemoveFriend(friend: Friend) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(actionError = null, actionMessage = null) }
+            friendsRepository.removeFriend(friend.friendshipId)
+                .onSuccess {
+                    val name = friend.profile.username ?: "Friend"
+                    _uiState.update {
+                        it.copy(actionMessage = "Removed @$name from your friends.")
+                    }
+                    refresh()
+                }
+                .onFailure { error ->
+                    Log.w(TAG, "removeFriend failed", error)
+                    _uiState.update {
+                        it.copy(actionError = error.message ?: "Failed to remove friend.")
+                    }
+                }
+        }
+    }
+
     private fun respond(requestId: String, accept: Boolean) {
         viewModelScope.launch {
             _uiState.update { it.copy(actionError = null) }

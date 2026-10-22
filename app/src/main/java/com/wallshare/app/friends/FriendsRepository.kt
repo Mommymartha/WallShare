@@ -172,6 +172,36 @@ class FriendsRepository(private val supabase: SupabaseClient) {
         }
     }
 
+    /**
+     * Removes an existing friend. Deletes the friendship record where the caller
+     * is one of the participants.
+     */
+    suspend fun removeFriend(friendshipId: String): Result<Unit> {
+        return try {
+            val uid = currentUserId()
+            supabase.postgrest.from("friendships").delete {
+                filter {
+                    eq("id", friendshipId)
+                    or {
+                        eq("user_id_a", uid)
+                        eq("user_id_b", uid)
+                    }
+                }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            try {
+                supabase.postgrest.rpc(
+                    "remove_friend",
+                    buildJsonObject { put("p_friendship_id", friendshipId) },
+                )
+                Result.success(Unit)
+            } catch (_: Exception) {
+                Result.failure(mapFriendActionError(e))
+            }
+        }
+    }
+
     private suspend fun fetchProfilesByIds(ids: List<String>): List<Profile> {
         if (ids.isEmpty()) return emptyList()
         return supabase.postgrest.from("profiles")

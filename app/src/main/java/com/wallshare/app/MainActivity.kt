@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.People
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material3.Button
@@ -323,6 +324,9 @@ private fun SignedInHome(
     var tab by remember {
         mutableStateOf(HomeTab.FRIENDS)
     }
+    var showSettingsSheet by remember {
+        mutableStateOf(false)
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().systemBarsPadding()
@@ -342,6 +346,14 @@ private fun SignedInHome(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
             )
+
+            IconButton(onClick = { showSettingsSheet = true }) {
+                Icon(
+                    imageVector = Icons.Rounded.Settings,
+                    contentDescription = "Wallpaper settings",
+                    tint = TextSecondary
+                )
+            }
 
             IconButton(onClick = onSignOut) {
                 Icon(
@@ -437,6 +449,13 @@ private fun SignedInHome(
                     unselectedTextColor = TextSecondary,
                     indicatorColor = AccentPrimary.copy(alpha = 0.12f)
                 )
+            )
+        }
+
+        if (showSettingsSheet) {
+            com.wallshare.app.ui.components.WallpaperSettingsSheet(
+                preferences = container.wallpaperPreferences,
+                onDismiss = { showSettingsSheet = false }
             )
         }
     }

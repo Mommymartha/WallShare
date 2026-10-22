@@ -175,6 +175,23 @@ class WallpaperWorker(
             return Result.success()
         }
 
+        // Look up who sent this wallpaper so we can display their username in notifications
+        val senderProfile = try {
+            wallpaperRepository.fetchSenderProfile(request.sender_id)
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not fetch sender profile for ${request.sender_id}", e)
+            null
+        }
+
+        val senderHandle = senderProfile?.username?.let { "@$it" }
+        val senderDisplayName = senderProfile?.display_name?.takeIf { it.isNotBlank() }
+        val senderLabel = when {
+            senderDisplayName != null && senderHandle != null -> "$senderDisplayName ($senderHandle)"
+            senderHandle != null -> senderHandle
+            senderDisplayName != null -> senderDisplayName
+            else -> "A friend"
+        }
+
         // 1. Check user preferences for auto-apply on Home and Lock screens
         val settings = container.wallpaperPreferences.getSettings()
         val allowHome = settings.autoApplyHome
@@ -212,14 +229,19 @@ class WallpaperWorker(
                     "BOTH" -> "home & lock screens"
                     else -> "wallpaper"
                 }
+                val skippedTitle = if (senderHandle != null) {
+                    "Wallpaper from $senderHandle (Paused)"
+                } else {
+                    "Wallpaper received (Paused)"
+                }
                 val skippedNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
-                    .setContentTitle("Wallpaper received (Paused)")
-                    .setContentText("A wallpaper was received, but auto-apply for $targetLabel is turned off in your settings.")
+                    .setContentTitle(skippedTitle)
+                    .setContentText("$senderLabel sent you a wallpaper, but auto-apply for $targetLabel is turned off in your settings.")
                     .setSmallIcon(R.mipmap.ic_launcher)
                     .setAutoCancel(true)
                     .build()
                 applicationContext.getSystemService(NotificationManager::class.java)
-                    .notify(RESULT_NOTIFICATION_ID, skippedNotification)
+                    .notify(requestId.hashCode(), skippedNotification)
             } catch (e: Exception) {
                 Log.w(TAG, "Could not post skipped notification", e)
             }
@@ -319,14 +341,34 @@ class WallpaperWorker(
                 which == WallpaperManager.FLAG_LOCK -> "lock screen"
                 else -> "wallpaper"
             }
+            val title = if (senderHandle != null) {
+                "New wallpaper from $senderHandle! \uD83C\uDF1F"
+            } else {
+                "New wallpaper applied! \uD83C\uDF1F"
+            }
+            val contentText = "$senderLabel just updated your $targetLabel."
+
+            val launchIntent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+                flags = android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            val contentPendingIntent = launchIntent?.let {
+                android.app.PendingIntent.getActivity(
+                    applicationContext,
+                    requestId.hashCode(),
+                    it,
+                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+
             val resultNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
-                .setContentTitle("New wallpaper applied! \uD83C\uDF1F")
-                .setContentText("Your $targetLabel was just updated")
+                .setContentTitle(title)
+                .setContentText(contentText)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setAutoCancel(true)
+                .setContentIntent(contentPendingIntent)
                 .build()
             applicationContext.getSystemService(NotificationManager::class.java)
-                .notify(RESULT_NOTIFICATION_ID, resultNotification)
+                .notify(requestId.hashCode(), resultNotification)
         } catch (e: Exception) {
             // Non-fatal: the wallpaper was applied, this is just a courtesy notification
             Log.w(TAG, "Could not post result notification", e)

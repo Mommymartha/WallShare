@@ -1,5 +1,6 @@
 package com.wallshare.app.wallpaper
 
+import com.wallshare.app.data.model.Profile
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
@@ -135,6 +136,21 @@ class WallpaperRepository(private val supabase: SupabaseClient) {
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Looks up the sender's profile (username and display name) for notification display.
+     */
+    suspend fun fetchSenderProfile(senderId: String): Profile? {
+        return try {
+            supabase.postgrest.from("profiles")
+                .select {
+                    filter { eq("id", senderId) }
+                }
+                .decodeSingleOrNull<Profile>()
+        } catch (e: Exception) {
+            null
         }
     }
 }

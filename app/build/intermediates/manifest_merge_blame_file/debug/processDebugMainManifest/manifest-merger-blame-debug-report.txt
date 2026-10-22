@@ -20,20 +20,20 @@
 14    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 14-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:8:5-95
 14-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:8:22-92
-15
-16    <!-- WorkManager uses a short-lived foreground service for expedited work on Android < 12 -->
-17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-17-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:11:5-77
-17-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:11:22-74
-18    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-18-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:12:5-87
-18-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:12:22-84
-19    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-19-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:13:5-81
-19-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:13:22-78
-20    <uses-permission android:name="android.permission.WAKE_LOCK" />
-20-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:23:5-68
-20-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:23:22-65
+15    <uses-permission android:name="android.permission.WAKE_LOCK" />
+15-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:9:5-68
+15-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:9:22-65
+16
+17    <!-- WorkManager uses a short-lived foreground service for expedited work on Android < 12 -->
+18    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+18-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:12:5-77
+18-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:12:22-74
+19    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+19-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:13:5-87
+19-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:13:22-84
+20    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+20-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:14:5-81
+20-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:14:22-78
 21    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- Required by older versions of Google Play services to create IID tokens -->
 21-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:24:5-79
 21-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:24:22-76
@@ -53,75 +53,75 @@
 28-->[androidx.core:core:1.13.1] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\3846e5582e2af5780cafc252ba4f0742\transformed\core-1.13.1\AndroidManifest.xml:26:22-94
 29
 30    <application
-30-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:15:5-61:19
+30-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:16:5-62:19
 31        android:name="com.wallshare.app.WallShareApplication"
-31-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:16:9-45
+31-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:9-45
 32        android:allowBackup="false"
-32-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:9-36
+32-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:18:9-36
 33        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 33-->[androidx.core:core:1.13.1] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\3846e5582e2af5780cafc252ba4f0742\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
 34        android:debuggable="true"
 35        android:extractNativeLibs="false"
 36        android:icon="@mipmap/ic_launcher"
-36-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:18:9-43
+36-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:19:9-43
 37        android:label="@string/app_name"
-37-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:20:9-41
+37-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:21:9-41
 38        android:roundIcon="@mipmap/ic_launcher_round"
-38-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:19:9-54
+38-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:20:9-54
 39        android:supportsRtl="true"
-39-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:22:9-35
+39-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:23:9-35
 40        android:testOnly="true"
 41        android:theme="@style/Theme.WallShare" >
-41-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:21:9-47
+41-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:22:9-47
 42        <activity
-42-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:24:9-32:20
+42-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:25:9-33:20
 43            android:name="com.wallshare.app.MainActivity"
-43-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:25:13-41
+43-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:26:13-41
 44            android:exported="true"
-44-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:26:13-36
+44-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:27:13-36
 45            android:theme="@style/Theme.WallShare" >
-45-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:27:13-51
+45-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:28:13-51
 46            <intent-filter>
-46-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:28:13-31:29
+46-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:29:13-32:29
 47                <action android:name="android.intent.action.MAIN" />
-47-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:29:17-69
-47-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:29:25-66
+47-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:30:17-69
+47-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:30:25-66
 48
 49                <category android:name="android.intent.category.LAUNCHER" />
-49-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:30:17-77
-49-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:30:27-74
+49-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:31:17-77
+49-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:31:27-74
 50            </intent-filter>
 51        </activity>
 52
 53        <service
-53-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:34:9-40:19
+53-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:35:9-41:19
 54            android:name="com.wallshare.app.notifications.WallShareMessagingService"
-54-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:35:13-68
+54-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:36:13-68
 55            android:exported="false" >
-55-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:36:13-37
+55-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:37:13-37
 56            <intent-filter>
-56-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:37:13-39:29
+56-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:13-40:29
 57                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-57-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:17-78
-57-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:25-75
+57-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:39:17-78
+57-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:39:25-75
 58            </intent-filter>
 59        </service>
 60
 61        <!-- Restart the periodic poll worker after device reboot -->
 62        <receiver
-62-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:43:9-50:20
+62-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:44:9-51:20
 63            android:name="com.wallshare.app.notifications.BootReceiver"
-63-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:44:13-55
+63-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:45:13-55
 64            android:exported="false" >
-64-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:45:13-37
+64-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:46:13-37
 65            <intent-filter>
-65-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:46:13-49:29
+65-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:47:13-50:29
 66                <action android:name="android.intent.action.BOOT_COMPLETED" />
-66-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:47:17-79
-66-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:47:25-76
+66-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:17-79
+66-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:25-76
 67                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-67-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:17-82
-67-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:25-79
+67-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:49:17-82
+67-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:49:25-79
 68            </intent-filter>
 69        </receiver>
 70
@@ -132,9 +132,9 @@
 75             MissingForegroundServiceTypeException.
 76        -->
 77        <service
-77-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:56:9-59:34
+77-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:57:9-60:34
 78            android:name="androidx.work.impl.foreground.SystemForegroundService"
-78-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:57:13-81
+78-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:58:13-81
 79            android:directBootAware="false"
 79-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:55:13-44
 80            android:enabled="@bool/enable_system_foreground_service_default"
@@ -142,7 +142,7 @@
 81            android:exported="false"
 81-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:57:13-37
 82            android:foregroundServiceType="dataSync" />
-82-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:58:13-53
+82-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:59:13-53
 83
 84        <provider
 84-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:29:9-37:20
@@ -319,8 +319,8 @@
 172            <intent-filter>
 172-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:116:13-120:29
 173                <action android:name="android.intent.action.BOOT_COMPLETED" />
-173-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:47:17-79
-173-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:47:25-76
+173-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:17-79
+173-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:25-76
 174                <action android:name="android.intent.action.TIME_SET" />
 174-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:118:17-73
 174-->[androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:118:25-70
@@ -457,10 +457,10 @@
 249            android:exported="false" >
 249-->[com.google.firebase:firebase-messaging:24.1.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\ae3e188bcf365f5e6f387278642f2f8e\transformed\firebase-messaging-24.1.0\AndroidManifest.xml:49:13-37
 250            <intent-filter android:priority="-500" >
-250-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:37:13-39:29
+250-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:13-40:29
 251                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-251-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:17-78
-251-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:25-75
+251-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:39:17-78
+251-->C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:39:25-75
 252            </intent-filter>
 253        </service>
 254        <service

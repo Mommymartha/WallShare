@@ -123,22 +123,31 @@ class WallpaperWorker(
         val auth = container.supabase.auth
 
         // ── Robust auth initialization for cold wakeups ──
-        // When the OS wakes the app from a killed state (FCM or WorkManager),
-        // Application.onCreate() initializes SupabaseClientProvider which reads
-        // the persisted session from SharedPreferences. awaitInitialization()
-        // waits for that disk read to complete.
-        auth.awaitInitialization()
+        // awaitInitialization() can hang indefinitely in a cold background
+        // wakeup if the SDK's internal session-loading coroutine stalls
+        // (no UI lifecycle to drive it). Wrap in a timeout so the worker
+        // retries instead of hanging silently.
+        try {
+            kotlinx.coroutines.withTimeout(10_000L) {
+                auth.awaitInitialization()
+            }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Log.w(TAG, "awaitInitialization() timed out for request $requestId - retrying")
+            return Result.retry()
+        }
 
         // After init, check if a session actually exists on disk. If it does
         // but the JWT has expired (which it will after the app has been killed
-        // for a while), explicitly refresh it. The old approach of checking
-        // sessionStatus.value was racy - during cold starts, supabase-kt can
-        // briefly emit LoadingFromStorage or NotAuthenticated before the
-        // refresh token exchange completes.
+        // for a while), explicitly refresh it.
         val currentSession = auth.currentSessionOrNull()
         if (currentSession != null) {
             try {
-                auth.refreshCurrentSession()
+                kotlinx.coroutines.withTimeout(15_000L) {
+                    auth.refreshCurrentSession()
+                }
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Log.w(TAG, "refreshCurrentSession() timed out for request $requestId - retrying")
+                return Result.retry()
             } catch (e: Exception) {
                 Log.e(TAG, "Token refresh failed for request $requestId", e)
                 return Result.retry()
@@ -193,8 +202,21 @@ class WallpaperWorker(
             return Result.failure()
         }
 
-        // 4. Apply Wallpaper (Terminal failure if OS rejects it)
+        // 4. Apply Wallpaper
+        // Some devices/OEMs silently drop setBitmap() when the screen is off
+        // or the process is in the background. Acquiring a partial wake lock
+        // for the duration of the call ensures the CPU stays awake long enough
+        // for the wallpaper to actually be written to disk by the OS.
+        val powerManager = applicationContext.getSystemService(Context.POWER_SERVICE)
+            as android.os.PowerManager
+        val wakeLock = powerManager.newWakeLock(
+            android.os.PowerManager.PARTIAL_WAKE_LOCK,
+            "WallShare::WallpaperApply"
+        )
+
         try {
+            wakeLock.acquire(30_000L) // 30 second timeout safety net
+
             val wallpaperManager = WallpaperManager.getInstance(applicationContext)
             val which = when (request.target) {
                 "HOME" -> WallpaperManager.FLAG_SYSTEM
@@ -205,11 +227,28 @@ class WallpaperWorker(
                     return Result.failure()
                 }
             }
-            wallpaperManager.setBitmap(bitmap, null, true, which)
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to apply wallpaper for request $requestId", e)
-            wallpaperRepository.updateStatus(requestId, "FAILED")
-            return Result.failure()
+
+            // Retry up to 3 times with a short delay — some devices need a
+            // moment after a cold wake before the wallpaper service is ready.
+            var applied = false
+            for (attempt in 1..3) {
+                try {
+                    wallpaperManager.setBitmap(bitmap, null, true, which)
+                    applied = true
+                    break
+                } catch (e: Exception) {
+                    Log.w(TAG, "setBitmap attempt $attempt failed for request $requestId", e)
+                    if (attempt < 3) kotlinx.coroutines.delay(1000L * attempt)
+                }
+            }
+
+            if (!applied) {
+                Log.e(TAG, "All setBitmap attempts failed for request $requestId")
+                wallpaperRepository.updateStatus(requestId, "FAILED")
+                return Result.failure()
+            }
+        } finally {
+            if (wakeLock.isHeld) wakeLock.release()
         }
 
         // 5. Final Status Update

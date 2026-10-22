@@ -40,18 +40,27 @@ class WallpaperPollWorker(
         val auth = container.supabase.auth
 
         // Wait for Supabase to finish loading the persisted auth session.
-        auth.awaitInitialization()
+        // Wrap in a timeout — awaitInitialization() can hang in cold background
+        // wakeups if the SDK's internal coroutine scope stalls.
+        try {
+            kotlinx.coroutines.withTimeout(10_000L) {
+                auth.awaitInitialization()
+            }
+        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+            Log.w(TAG, "awaitInitialization() timed out — skipping this poll cycle")
+            return Result.success()
+        }
 
-        // Robust session refresh for cold wakeups. The old approach of
-        // checking sessionStatus.value was racy — during cold starts,
-        // supabase-kt can briefly emit LoadingFromStorage or NotAuthenticated
-        // before the refresh token exchange completes. Instead, check if a
-        // session actually exists on disk and force-refresh the JWT.
         val currentSession = auth.currentSessionOrNull()
         if (currentSession != null) {
             try {
-                auth.refreshCurrentSession()
+                kotlinx.coroutines.withTimeout(15_000L) {
+                    auth.refreshCurrentSession()
+                }
                 Log.d(TAG, "Session refresh succeeded")
+            } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+                Log.w(TAG, "Session refresh timed out — skipping this poll cycle")
+                return Result.success()
             } catch (e: Exception) {
                 Log.w(TAG, "Session refresh failed — token may be revoked", e)
                 return Result.success()

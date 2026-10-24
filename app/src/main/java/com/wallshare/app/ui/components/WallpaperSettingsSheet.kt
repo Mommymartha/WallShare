@@ -1,5 +1,6 @@
 package com.wallshare.app.ui.components
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -7,28 +8,40 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Wallpaper
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.wallshare.app.WallShareApplication
 import com.wallshare.app.ui.theme.*
 import com.wallshare.app.wallpaper.WallpaperPreferences
+import com.wallshare.app.wallpaper.lock.WallpaperLockService
+import com.wallshare.app.wallpaper.lock.WallpaperLockVault
+import com.wallshare.app.wallpaper.lock.ui.PinCreateDialog
+import com.wallshare.app.wallpaper.lock.ui.PinVerifyDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WallpaperSettingsSheet(
     preferences: WallpaperPreferences,
+    lockVault: WallpaperLockVault = (LocalContext.current.applicationContext as WallShareApplication).container.wallpaperLockVault,
     onDismiss: () -> Unit,
 ) {
+    val context = LocalContext.current
     val settings by preferences.settings.collectAsStateWithLifecycle()
+    val isLockActive by lockVault.isLockActiveFlow.collectAsStateWithLifecycle()
+    var showPinCreateDialog by remember { mutableStateOf(false) }
+    var showPinVerifyDialog by remember { mutableStateOf(false) }
+
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     ModalBottomSheet(
@@ -162,22 +175,77 @@ fun WallpaperSettingsSheet(
                 onCheckedChange = { preferences.setAutoApplyLock(it) }
             )
 
+            HorizontalDivider(
+                color = DarkSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.padding(vertical = 12.dp)
+            )
+
+            // Forced Wallpaper Lock (Anti-Tamper Enforcer)
+            SettingToggleItem(
+                title = "Forced Wallpaper Lock",
+                description = if (isLockActive)
+                    "Active: manual wallpaper changes are instantly reverted"
+                else
+                    "PIN-protected: prevent any manual changes to your wallpaper",
+                icon = Icons.Rounded.Shield,
+                checked = isLockActive,
+                onCheckedChange = { desiredState ->
+                    if (desiredState) {
+                        // Toggling ON -> Request PIN creation
+                        showPinCreateDialog = true
+                    } else {
+                        // Toggling OFF -> Intercept and verify PIN
+                        showPinVerifyDialog = true
+                    }
+                }
+            )
+
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Notice about old wallpapers cleanup
+            // Notice about old wallpapers cleanup & lock protection
             Card(
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(containerColor = DarkSurfaceVariant.copy(alpha = 0.4f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "🔒 Privacy note: Wallpapers are applied directly via Android's wallpaper service and automatically cleaned up from cloud storage after delivery.",
+                    text = if (isLockActive)
+                        "🛡️ Wallpaper Lock is ON: A background enforcer service is guarding your wallpaper. To disable or change wallpapers, turn off the toggle and enter your 4-digit PIN."
+                    else
+                        "🔒 Privacy note: Wallpapers are applied directly via Android's wallpaper service and automatically cleaned up from cloud storage after delivery.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = if (isLockActive) AccentPrimary else TextSecondary,
                     modifier = Modifier.padding(12.dp)
                 )
             }
         }
+    }
+
+    if (showPinCreateDialog) {
+        PinCreateDialog(
+            onDismiss = { showPinCreateDialog = false },
+            onPinCreated = { pin ->
+                lockVault.savePin(pin)
+                // Securely capture and cache the currently active wallpaper for the enforcer
+                lockVault.ensureLockedWallpaperReady()
+                lockVault.setLockActive(true)
+                WallpaperLockService.start(context)
+                showPinCreateDialog = false
+            }
+        )
+    }
+
+    if (showPinVerifyDialog) {
+        PinVerifyDialog(
+            onDismiss = { showPinVerifyDialog = false },
+            onVerifyPin = { pin -> lockVault.verifyPin(pin) },
+            onSuccess = {
+                lockVault.setLockActive(false)
+                lockVault.clearPin()
+                WallpaperLockService.stop(context)
+                showPinVerifyDialog = false
+            }
+        )
     }
 }
 

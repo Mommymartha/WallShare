@@ -46,6 +46,17 @@ class BootReceiver : BroadcastReceiver() {
                 ExistingPeriodicWorkPolicy.KEEP,
                 periodicPoll,
             )
+
+            // Reboot Trap: Restart WallpaperLockService if Forced Wallpaper Lock was active
+            try {
+                val lockVault = com.wallshare.app.wallpaper.lock.WallpaperLockVault(context)
+                if (lockVault.isLockActive()) {
+                    Log.i(TAG, "Wallpaper lock active on boot — restarting WallpaperLockService")
+                    com.wallshare.app.wallpaper.lock.WallpaperLockService.start(context)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to restore WallpaperLockService on boot", e)
+            }
         }
     }
 }

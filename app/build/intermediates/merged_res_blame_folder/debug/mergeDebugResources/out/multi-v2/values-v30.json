@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.wallshare.app-mergeDebugResources-73:/values-v30/values-v30.xml",
+            "outputFile": "com.wallshare.app-mergeDebugResources-74:/values-v30/values-v30.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Shavez Ali\\.gradle\\caches\\8.13\\transforms\\1af9e510a66bfdb4625e5d00b3654a17\\transformed\\material3-release\\res\\values-v30\\values-v30.xml",
+                    "source": "C:\\Users\\Shavez Ali\\.gradle\\caches\\8.13\\transforms\\df0255f9dcd82a3a342807c44ec1933a\\transformed\\material3-release\\res\\values-v30\\values-v30.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",

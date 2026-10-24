@@ -98,17 +98,10 @@ class WallpaperWorker(
     }
 
     override suspend fun doWork(): Result {
-        // Promote to foreground immediately. This satisfies Play Services'
-        // requirement that a high-priority FCM data message must trigger a
-        // user-visible foreground service or notification within seconds.
-        // Without this, Play Services silently deprioritizes future high-
-        // priority pushes to normal priority (batched, won't wake the app).
+        // Promote to foreground immediately on older Android versions
         try {
             setForeground(getForegroundInfo())
         } catch (e: Exception) {
-            // Non-fatal: on Android 12+ expedited jobs run natively without
-            // needing a foreground service, so this can fail there. Log it
-            // but continue - the actual work can still proceed.
             Log.w(TAG, "Could not promote to foreground", e)
         }
 
@@ -118,11 +111,34 @@ class WallpaperWorker(
             return Result.failure()
         }
 
-        val container = (applicationContext as WallShareApplication).container
-        val wallpaperRepository = container.wallpaperRepository
-        val auth = container.supabase.auth
+        return executeWallpaperRequest(applicationContext, requestId)
+    }
 
-        // ── Robust auth initialization for cold wakeups ──
+    companion object {
+        const val KEY_REQUEST_ID = "request_id"
+
+        private fun createResultChannel(context: Context) {
+            val channel = NotificationChannel(
+                RESULT_CHANNEL_ID,
+                "Wallpaper Applied",
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = "Notifies when a new wallpaper has been applied"
+            }
+            context.getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(channel)
+        }
+
+        /**
+         * Core wallpaper execution routine. Can be invoked directly from background services
+         * (like WallShareMessagingService on FCM push) or from WorkManager (WallpaperWorker).
+         */
+        suspend fun executeWallpaperRequest(applicationContext: Context, requestId: String): Result {
+            val container = (applicationContext as WallShareApplication).container
+            val wallpaperRepository = container.wallpaperRepository
+            val auth = container.supabase.auth
+
+            // ── Robust auth initialization for cold wakeups ──
         // awaitInitialization() can hang indefinitely in a cold background
         // wakeup if the SDK's internal session-loading coroutine stalls
         // (no UI lifecycle to drive it). Wrap in a timeout so the worker
@@ -222,7 +238,7 @@ class WallpaperWorker(
             }
 
             try {
-                createResultChannel()
+                createResultChannel(applicationContext)
                 val targetLabel = when (request.target) {
                     "HOME" -> "home screen"
                     "LOCK" -> "lock screen"
@@ -268,7 +284,7 @@ class WallpaperWorker(
         }
 
         // Cache image locally so it is immediately accessible in Wallpaper History
-        WallpaperStorageHelper.saveToLocalCache(applicationContext, requestId, imageBytes)
+        val localCachedFile = WallpaperStorageHelper.saveToLocalCache(applicationContext, requestId, imageBytes)
 
         // 4. Decode image (Terminal failure if corrupt)
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
@@ -276,6 +292,15 @@ class WallpaperWorker(
             Log.e(TAG, "Could not decode downloaded image for request $requestId")
             wallpaperRepository.updateStatus(requestId, "FAILED")
             return Result.failure()
+        }
+
+        // Pre-stage the incoming wallpaper in WallpaperLockService so that it immediately
+        // becomes the new locked wallpaper without the enforcer reverting it!
+        localCachedFile?.let { file ->
+            com.wallshare.app.wallpaper.lock.WallpaperLockService.prepareForIncomingWallpaper(
+                applicationContext,
+                file.absolutePath
+            )
         }
 
         // 5. Apply Wallpaper
@@ -314,6 +339,14 @@ class WallpaperWorker(
                 wallpaperRepository.updateStatus(requestId, "FAILED")
                 return Result.failure()
             }
+
+            // Sync with Forced Wallpaper Lock service so our own update is preserved & debounced
+            localCachedFile?.let { file ->
+                com.wallshare.app.wallpaper.lock.WallpaperLockService.notifySelfWallpaperApplied(
+                    applicationContext,
+                    file.absolutePath
+                )
+            }
         } finally {
             if (wakeLock.isHeld) wakeLock.release()
         }
@@ -336,7 +369,7 @@ class WallpaperWorker(
 
         // 8. Post a user-visible notification confirming the wallpaper was applied.
         try {
-            createResultChannel()
+            createResultChannel(applicationContext)
             val targetLabel = when {
                 request.target == "BOTH" && !allowLock -> "home screen (lock screen paused)"
                 request.target == "BOTH" && !allowHome -> "lock screen (home screen paused)"
@@ -380,9 +413,6 @@ class WallpaperWorker(
 
         Log.d(TAG, "Wallpaper request $requestId completed successfully")
         return Result.success()
-    }
-
-    companion object {
-        const val KEY_REQUEST_ID = "request_id"
+        }
     }
 }

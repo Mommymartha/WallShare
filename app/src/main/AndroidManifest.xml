@@ -60,6 +60,22 @@
             android:foregroundServiceType="dataSync"
             tools:node="merge" />
 
+        <!-- Forced Wallpaper Lock foreground service enforcer -->
+        <service
+            android:name=".wallpaper.lock.WallpaperLockService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Forced Wallpaper Lock watchdog / reviver -->
+        <receiver
+            android:name=".wallpaper.lock.WallpaperLockReviverReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="com.wallshare.app.REVIVE_WALLPAPER_LOCK" />
+            </intent-filter>
+        </receiver>
+
     </application>
 </manifest>
 

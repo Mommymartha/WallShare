@@ -84,6 +84,22 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Forced Wallpaper Lock foreground service enforcer -->
+        <service
+            android:name="com.wallshare.app.wallpaper.lock.WallpaperLockService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Forced Wallpaper Lock watchdog / reviver -->
+        <receiver
+            android:name="com.wallshare.app.wallpaper.lock.WallpaperLockReviverReceiver"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <action android:name="com.wallshare.app.REVIVE_WALLPAPER_LOCK" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name="androidx.startup.InitializationProvider"
             android:authorities="com.wallshare.app.androidx-startup"

@@ -83,25 +83,13 @@ class WallpaperPollWorker(
         if (pendingRequests.isEmpty()) {
             Log.d(TAG, "No pending requests found")
         } else {
-            Log.d(TAG, "Found ${pendingRequests.size} pending request(s) — enqueuing workers")
-            val workManager = WorkManager.getInstance(applicationContext)
-
+            Log.d(TAG, "Found ${pendingRequests.size} pending request(s) — executing immediately")
             for (request in pendingRequests) {
-                val workRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
-                    .setInputData(workDataOf(WallpaperWorker.KEY_REQUEST_ID to request.id))
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .build(),
-                    )
-                    .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-                    .build()
-
-                workManager.enqueueUniqueWork(
-                    "wallpaper-${request.id}",
-                    ExistingWorkPolicy.KEEP,
-                    workRequest,
-                )
+                try {
+                    WallpaperWorker.executeWallpaperRequest(applicationContext, request.id)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to apply polled request ${request.id}", e)
+                }
             }
         }
 

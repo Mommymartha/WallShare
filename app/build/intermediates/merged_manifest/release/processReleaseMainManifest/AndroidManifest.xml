@@ -75,10 +75,22 @@
              falls back to a foreground service crashes with
              MissingForegroundServiceTypeException.
         -->
+        <!--
+             WorkManager's SystemForegroundService needs a foreground service type
+             declared in the manifest on API 34+. Without this, expedited work that
+             falls back to a foreground service crashes with
+             MissingForegroundServiceTypeException.
+        -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:directBootAware="false"
             android:enabled="@bool/enable_system_foreground_service_default"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- Forced Wallpaper Lock foreground service enforcer -->
+        <service
+            android:name="com.wallshare.app.wallpaper.lock.WallpaperLockService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 

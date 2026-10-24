@@ -70,21 +70,42 @@ class WallShareMessagingService : FirebaseMessagingService() {
             return
         }
 
-        val workRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
-            .setInputData(workDataOf(WallpaperWorker.KEY_REQUEST_ID to requestId))
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build(),
-            )
-            .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
-            .build()
+        Log.d(TAG, "FCM data message received for wallpaper request: $requestId")
 
-        WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-            "wallpaper-$requestId",
-            ExistingWorkPolicy.KEEP,
-            workRequest,
+        // 1. Acquire partial WakeLock so CPU doesn't sleep while processing in background
+        val powerManager = getSystemService(POWER_SERVICE) as android.os.PowerManager
+        val wakeLock = powerManager.newWakeLock(
+            android.os.PowerManager.PARTIAL_WAKE_LOCK,
+            "WallShare::FCMImmediateApply"
         )
+        wakeLock.acquire(45_000L)
+
+        // 2. Immediately execute in background serviceScope without waiting for WorkManager or app launch!
+        serviceScope.launch {
+            try {
+                Log.i(TAG, "Starting immediate background apply for request $requestId...")
+                val result = WallpaperWorker.executeWallpaperRequest(applicationContext, requestId)
+                Log.i(TAG, "Immediate background apply finished with result: $result")
+            } catch (e: Exception) {
+                Log.e(TAG, "Immediate apply encountered error; enqueuing WorkManager fallback", e)
+                val workRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
+                    .setInputData(workDataOf(WallpaperWorker.KEY_REQUEST_ID to requestId))
+                    .setConstraints(
+                        Constraints.Builder()
+                            .setRequiredNetworkType(NetworkType.CONNECTED)
+                            .build(),
+                    )
+                    .build()
+
+                WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+                    "wallpaper-$requestId",
+                    ExistingWorkPolicy.REPLACE,
+                    workRequest,
+                )
+            } finally {
+                if (wakeLock.isHeld) wakeLock.release()
+            }
+        }
     }
 
     override fun onDestroy() {

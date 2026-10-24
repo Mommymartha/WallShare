@@ -26,6 +26,6 @@
       applicationId="com.wallshare.app"
       generatedSourceFolders="build\generated\ap_generated_sources\release\out;build\generated\source\buildConfig\release"
       generatedResourceFolders="build\generated\res\processReleaseGoogleServices;build\generated\res\resValues\release"
-      desugaredMethodsFiles="C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\e54ca699aa4e5ada5654ebb4846e9c1f\transformed\D8BackportedDesugaredMethods.txt">
+      desugaredMethodsFiles="C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\44af7d255e96238a805920a64ade5f37\transformed\D8BackportedDesugaredMethods.txt">
   </artifact>
 </variant>

@@ -99,4 +99,5 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.material.icons.extended)
+    implementation(libs.security.crypto)
 }

@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.wallshare.app-mergeReleaseResources-70:/values-watch-v20/values-watch-v20.xml",
+            "outputFile": "com.wallshare.app-mergeReleaseResources-71:/values-watch-v20/values-watch-v20.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\Shavez Ali\\.gradle\\caches\\8.13\\transforms\\43da9739ffff3d2388ab9eaac2068a37\\transformed\\play-services-auth-21.1.1\\res\\values-watch-v20\\values.xml",
+                    "source": "C:\\Users\\Shavez Ali\\.gradle\\caches\\8.13\\transforms\\60e8e787c5d6d8626bf26d447eb2d36d\\transformed\\play-services-auth-21.1.1\\res\\values-watch-v20\\values.xml",
                     "from": {
                         "startLines": "4,5,6,7,8,9,10,11",
                         "startColumns": "0,0,0,0,0,0,0,0",

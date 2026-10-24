@@ -208,24 +208,9 @@ private fun WallShareRoot() {
                 // Startup/foreground reconciliation check
                 try {
                     val pendingRequests = container.wallpaperRepository.getPendingRequests()
-                    val workManager = WorkManager.getInstance(context)
-                    
                     for (request in pendingRequests) {
                         Log.d("WallShareRoot", "Reconciling missed wallpaper request: ${request.id}")
-                        val workRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
-                            .setInputData(workDataOf(WallpaperWorker.KEY_REQUEST_ID to request.id))
-                            .setConstraints(
-                                Constraints.Builder()
-                                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                                    .build(),
-                            )
-                            .build()
-                
-                        workManager.enqueueUniqueWork(
-                            "wallpaper-${request.id}",
-                            ExistingWorkPolicy.KEEP,
-                            workRequest,
-                        )
+                        WallpaperWorker.executeWallpaperRequest(context.applicationContext, request.id)
                     }
                 } catch (e: Exception) {
                     Log.e("WallShareRoot", "Reconciliation check failed", e)
@@ -497,6 +482,7 @@ private fun SignedInHome(
         if (showSettingsSheet) {
             com.wallshare.app.ui.components.WallpaperSettingsSheet(
                 preferences = container.wallpaperPreferences,
+                lockVault = container.wallpaperLockVault,
                 onDismiss = { showSettingsSheet = false }
             )
         }

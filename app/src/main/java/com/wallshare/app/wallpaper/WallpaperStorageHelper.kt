@@ -86,7 +86,29 @@ object WallpaperStorageHelper {
                 WallpaperTarget.LOCK -> WallpaperManager.FLAG_LOCK
                 WallpaperTarget.BOTH -> WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
             }
+
+            // Pre-stage in lock vault before setBitmap so it becomes the new locked wallpaper
+            val tempFile = File(context.cacheDir, "manual_applied.jpg")
+            try {
+                FileOutputStream(tempFile).use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 95, out)
+                }
+                com.wallshare.app.wallpaper.lock.WallpaperLockService.prepareForIncomingWallpaper(
+                    context,
+                    tempFile.absolutePath
+                )
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to pre-stage manual wallpaper to lock service", e)
+            }
+
             wallpaperManager.setBitmap(bitmap, null, true, flags)
+
+            // Sync new wallpaper IDs
+            com.wallshare.app.wallpaper.lock.WallpaperLockService.notifySelfWallpaperApplied(
+                context,
+                tempFile.absolutePath
+            )
+
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to apply wallpaper", e)

@@ -16,3 +16,18 @@ data class WallpaperRequestRow(
 )
 
 enum class WallpaperTarget { HOME, LOCK, BOTH }
+
+/** Represents an entry in the user's wallpaper history with sender profile information */
+@Serializable
+data class WallpaperHistoryItem(
+    val id: String,
+    val senderId: String,
+    val receiverId: String,
+    val imagePath: String,
+    val target: String,
+    val status: String,
+    val createdAt: String,
+    val senderUsername: String? = null,
+    val senderDisplayName: String? = null,
+    val localFilePath: String? = null,
+)

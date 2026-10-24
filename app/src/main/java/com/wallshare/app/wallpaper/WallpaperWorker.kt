@@ -214,11 +214,11 @@ class WallpaperWorker(
             Log.d(TAG, "Wallpaper update for request $requestId skipped: blocked by user settings (target=${request.target}, home=$allowHome, lock=$allowLock)")
             // Mark request COMPLETED so it isn't repeatedly retried
             wallpaperRepository.updateStatus(requestId, "COMPLETED")
-            // Clean up image from storage
+            // Prune old wallpapers beyond the history limit
             try {
-                wallpaperRepository.deleteImage(request.image_path)
+                wallpaperRepository.pruneOldWallpapers(currentUserId, keepCount = WallpaperRepository.MAX_HISTORY_WALLPAPERS)
             } catch (e: Exception) {
-                Log.w(TAG, "Storage cleanup non-fatal error for $requestId", e)
+                Log.w(TAG, "Storage prune non-fatal error for $requestId", e)
             }
 
             try {
@@ -266,6 +266,9 @@ class WallpaperWorker(
             Log.w(TAG, "Failed to download image for request $requestId - retrying", e)
             return Result.retry()
         }
+
+        // Cache image locally so it is immediately accessible in Wallpaper History
+        WallpaperStorageHelper.saveToLocalCache(applicationContext, requestId, imageBytes)
 
         // 4. Decode image (Terminal failure if corrupt)
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
@@ -322,12 +325,13 @@ class WallpaperWorker(
             return Result.retry()
         }
 
-        // 7. Clean up image from Supabase Storage so old wallpapers do not accumulate
+        // 7. Auto-delete wallpapers older than 16 so Supabase Storage doesn't overflow,
+        // while preserving the user's latest 16 wallpapers in history!
         try {
-            wallpaperRepository.deleteImage(request.image_path)
-            Log.d(TAG, "Cleaned up storage image ${request.image_path} after applying")
+            wallpaperRepository.pruneOldWallpapers(currentUserId, keepCount = WallpaperRepository.MAX_HISTORY_WALLPAPERS)
+            Log.d(TAG, "Pruned old wallpapers beyond latest ${WallpaperRepository.MAX_HISTORY_WALLPAPERS} for user $currentUserId")
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to clean up storage image ${request.image_path} (non-fatal)", e)
+            Log.w(TAG, "Pruning old wallpapers failed (non-fatal)", e)
         }
 
         // 8. Post a user-visible notification confirming the wallpaper was applied.

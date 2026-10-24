@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.History
 import androidx.compose.material.icons.rounded.People
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.automirrored.rounded.Logout
@@ -58,6 +59,7 @@ import com.wallshare.app.friends.FriendsViewModel
 import com.wallshare.app.ui.screens.FriendsScreen
 import com.wallshare.app.ui.screens.LoginScreen
 import com.wallshare.app.ui.screens.SendWallpaperScreen
+import com.wallshare.app.ui.screens.WallpaperHistoryScreen
 import com.wallshare.app.ui.screens.UsernameScreen
 import com.wallshare.app.ui.theme.AccentPrimary
 import com.wallshare.app.ui.theme.DarkBackground
@@ -67,6 +69,7 @@ import com.wallshare.app.ui.theme.ErrorRed
 import com.wallshare.app.ui.theme.TextPrimary
 import com.wallshare.app.ui.theme.TextSecondary
 import com.wallshare.app.ui.theme.WallShareTheme
+import com.wallshare.app.wallpaper.WallpaperHistoryViewModel
 import com.wallshare.app.wallpaper.WallpaperViewModel
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -304,14 +307,16 @@ private fun WallShareRoot() {
  */
 private enum class HomeTab {
     FRIENDS,
-    SEND
+    SEND,
+    HISTORY
 }
 
 /**
- * Minimal bottom-nav host for the two SignedIn-level screens.
+ * Minimal bottom-nav host for the SignedIn-level screens.
  *
- * FriendsScreen remains unchanged.
- * SendWallpaperScreen is now reachable through the Send tab.
+ * FriendsScreen: search friends, manage requests, view friends list.
+ * SendWallpaperScreen: pick image and dispatch to friends.
+ * WallpaperHistoryScreen: view last 16 received wallpapers, apply, and save to gallery.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -396,6 +401,20 @@ private fun SignedInHome(
                         },
                     )
                 }
+
+                HomeTab.HISTORY -> {
+                    val application = LocalContext.current.applicationContext as android.app.Application
+                    val historyViewModel: WallpaperHistoryViewModel = viewModel(
+                        factory = WallpaperHistoryViewModel.factory(
+                            application,
+                            container.wallpaperRepository,
+                        ),
+                    )
+
+                    WallpaperHistoryScreen(
+                        viewModel = historyViewModel
+                    )
+                }
             }
         }
 
@@ -440,6 +459,29 @@ private fun SignedInHome(
                     Icon(
                         imageVector = Icons.AutoMirrored.Rounded.Send,
                         contentDescription = "Send wallpaper"
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = AccentPrimary,
+                    selectedTextColor = AccentPrimary,
+                    unselectedIconColor = TextSecondary,
+                    unselectedTextColor = TextSecondary,
+                    indicatorColor = AccentPrimary.copy(alpha = 0.12f)
+                )
+            )
+
+            NavigationBarItem(
+                selected = tab == HomeTab.HISTORY,
+                onClick = {
+                    tab = HomeTab.HISTORY
+                },
+                label = {
+                    Text("History")
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Rounded.History,
+                        contentDescription = "Wallpaper history"
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(

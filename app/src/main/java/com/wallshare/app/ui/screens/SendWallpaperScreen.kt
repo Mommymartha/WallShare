@@ -161,12 +161,36 @@ fun SendWallpaperScreen(
             AnimatedVisibility(visible = state.selectedImageUri != null) {
                 Column {
                     // Friend Selection (Horizontal Scroll)
-                    Text(
-                        text = "Send to…",
-                        color = TextPrimary,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(start = 24.dp, bottom = 12.dp)
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Send to…",
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+
+                        if (state.friends.isNotEmpty()) {
+                            val allSelected = state.selectedFriends.size == state.friends.size
+                            TextButton(
+                                onClick = { viewModel.onSelectAllFriends() },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text(
+                                    text = if (allSelected) "Deselect All" else "Select All (${state.friends.size})",
+                                    color = AccentPrimary,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
                     
                     if (state.friends.isEmpty()) {
                         Text("No friends available", color = TextSecondary, modifier = Modifier.padding(horizontal = 24.dp))
@@ -178,8 +202,8 @@ fun SendWallpaperScreen(
                             items(state.friends, key = { it.friendshipId }) { friend ->
                                 FriendAvatarPicker(
                                     friend = friend,
-                                    selected = state.selectedFriend?.friendshipId == friend.friendshipId,
-                                    onClick = { viewModel.onFriendSelected(friend) }
+                                    selected = friend.friendshipId in state.selectedFriends,
+                                    onClick = { viewModel.onToggleFriend(friend) }
                                 )
                             }
                         }
@@ -225,10 +249,20 @@ fun SendWallpaperScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // Send Button
+                    // Send Button with dynamic friend count
+                    val selectedCount = state.selectedFriends.size
+                    val sendButtonText = when (selectedCount) {
+                        0 -> "Select Friends to Send"
+                        1 -> {
+                            val single = state.friends.firstOrNull { it.friendshipId in state.selectedFriends }
+                            "Send to @${single?.profile?.username ?: "friend"}"
+                        }
+                        else -> "Send to $selectedCount Friends"
+                    }
+
                     Button(
                         onClick = { viewModel.onSendClicked(context) },
-                        enabled = !state.isSending && state.selectedFriend != null,
+                        enabled = !state.isSending && selectedCount > 0,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 24.dp)
@@ -246,7 +280,7 @@ fun SendWallpaperScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Send Wallpaper", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBackground)
+                            Text(sendButtonText, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = DarkBackground)
                         }
                     }
                 }
@@ -280,25 +314,46 @@ private fun FriendAvatarPicker(friend: Friend, selected: Boolean, onClick: () ->
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.clickable(onClick = onClick)
     ) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(if (selected) AccentPrimary else DarkSurfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = friend.profile.username?.firstOrNull()?.uppercase() ?: "?",
-                color = if (selected) DarkBackground else TextSecondary,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(if (selected) AccentPrimary else DarkSurfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = friend.profile.username?.firstOrNull()?.uppercase() ?: "?",
+                    color = if (selected) DarkBackground else TextSecondary,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .align(Alignment.BottomEnd)
+                        .clip(CircleShape)
+                        .background(AccentPrimary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.CheckCircle,
+                        contentDescription = "Selected",
+                        tint = DarkBackground,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = friend.profile.username ?: "",
             color = if (selected) AccentPrimary else TextSecondary,
-            style = MaterialTheme.typography.labelLarge
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }

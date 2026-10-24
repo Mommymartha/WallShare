@@ -1,13 +1,19 @@
 package com.wallshare.app.wallpaper
 
+import android.content.Context
+import android.util.Log
 import com.wallshare.app.data.model.Profile
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.postgrest
+import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.storage.storage
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.io.File
 import java.util.UUID
+
+private const val TAG = "WallpaperRepository"
 
 /**
  * Owns every direct Supabase call for sending and applying wallpapers.
@@ -66,12 +72,6 @@ class WallpaperRepository(private val supabase: SupabaseClient) {
     }
 
     /**
-     * Re-fetches a request by id, requiring it to still be PENDING and
-     * addressed to the given receiver. Used by WallpaperWorker to verify
-     * the FCM payload against real database state - the payload is a hint,
-     * never trusted directly (see WallShareMessagingService).
-     */
-    /**
      * Re-fetches a request by id, requiring it to still be PENDING or PROCESSING
      * and addressed to the given receiver. Used by WallpaperWorker to verify
      * the FCM payload against real database state, and recover interrupted jobs.
@@ -110,6 +110,28 @@ class WallpaperRepository(private val supabase: SupabaseClient) {
     }
 
     /**
+     * Downloads an image and caches it in local internal app storage.
+     * If the local file already exists, it is returned immediately without a network call.
+     */
+    suspend fun downloadAndCacheWallpaper(
+        context: Context,
+        requestId: String,
+        imagePath: String
+    ): File? {
+        val existing = WallpaperStorageHelper.getLocalWallpaperFile(context, requestId)
+        if (existing.exists() && existing.length() > 0) {
+            return existing
+        }
+        return try {
+            val bytes = downloadImage(imagePath)
+            WallpaperStorageHelper.saveToLocalCache(context, requestId, bytes)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to download and cache wallpaper $requestId", e)
+            null
+        }
+    }
+
+    /**
      * Updates status. RLS only allows the receiver to do this at all, and
      * the Step 2 trigger only allows legal transitions
      * (PENDING -> PROCESSING -> COMPLETED/FAILED) - an illegal transition
@@ -128,7 +150,7 @@ class WallpaperRepository(private val supabase: SupabaseClient) {
     }
 
     /**
-     * Deletes an image from storage after it has been applied to avoid piling up files in Supabase Storage.
+     * Deletes an image from storage to avoid piling up files in Supabase Storage.
      */
     suspend fun deleteImage(imagePath: String): Result<Unit> {
         return try {
@@ -152,5 +174,128 @@ class WallpaperRepository(private val supabase: SupabaseClient) {
         } catch (e: Exception) {
             null
         }
+    }
+
+    /**
+     * Fetches the user's wallpaper history (up to [limit] most recent received wallpapers).
+     * Enriches each item with sender profile details and checks for local cached files.
+     */
+    suspend fun getWallpaperHistory(
+        context: Context,
+        limit: Long = MAX_HISTORY_WALLPAPERS.toLong()
+    ): List<WallpaperHistoryItem> {
+        return try {
+            val receiverId = currentUserId()
+            val rows = supabase.postgrest.from("wallpaper_requests")
+                .select {
+                    filter {
+                        eq("receiver_id", receiverId)
+                    }
+                    order("created_at", order = Order.DESCENDING)
+                    limit(limit)
+                }
+                .decodeList<WallpaperRequestRow>()
+
+            if (rows.isEmpty()) return emptyList()
+
+            // Batch fetch sender profiles to display usernames/avatars
+            val senderIds = rows.map { it.sender_id }.distinct()
+            val profiles = try {
+                supabase.postgrest.from("profiles")
+                    .select {
+                        filter {
+                            isIn("id", senderIds)
+                        }
+                    }
+                    .decodeList<Profile>()
+                    .associateBy { it.id }
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to batch fetch sender profiles", e)
+                emptyMap()
+            }
+
+            rows.map { row ->
+                val profile = profiles[row.sender_id]
+                val localFile = WallpaperStorageHelper.getLocalWallpaperFile(context, row.id)
+                val localPath = if (localFile.exists() && localFile.length() > 0) localFile.absolutePath else null
+
+                WallpaperHistoryItem(
+                    id = row.id,
+                    senderId = row.sender_id,
+                    receiverId = row.receiver_id,
+                    imagePath = row.image_path,
+                    target = row.target,
+                    status = row.status,
+                    createdAt = row.created_at,
+                    senderUsername = profile?.username,
+                    senderDisplayName = profile?.display_name,
+                    localFilePath = localPath,
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to fetch wallpaper history", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Auto-deletes older wallpapers beyond [keepCount] (default 16) for [receiverId].
+     * Both the image in Supabase Storage and the database row are removed to prevent
+     * space overflow in Supabase!
+     */
+    suspend fun pruneOldWallpapers(
+        receiverId: String,
+        keepCount: Int = MAX_HISTORY_WALLPAPERS
+    ): Result<Int> {
+        return try {
+            val allRequests = supabase.postgrest.from("wallpaper_requests")
+                .select {
+                    filter {
+                        eq("receiver_id", receiverId)
+                    }
+                    order("created_at", order = Order.DESCENDING)
+                }
+                .decodeList<WallpaperRequestRow>()
+
+            if (allRequests.size <= keepCount) {
+                return Result.success(0)
+            }
+
+            val toPrune = allRequests.drop(keepCount)
+            var prunedCount = 0
+
+            for (req in toPrune) {
+                try {
+                    // 1. Delete image from Supabase Storage
+                    if (req.image_path.isNotBlank()) {
+                        supabase.storage.from("wallpapers").delete(listOf(req.image_path))
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Storage deletion failed for ${req.image_path}", e)
+                }
+
+                try {
+                    // 2. Delete row from wallpaper_requests table
+                    supabase.postgrest.from("wallpaper_requests").delete {
+                        filter {
+                            eq("id", req.id)
+                        }
+                    }
+                    prunedCount++
+                } catch (e: Exception) {
+                    Log.w(TAG, "Database row deletion failed for ${req.id}", e)
+                }
+            }
+
+            Log.d(TAG, "Successfully pruned $prunedCount old wallpaper(s) (kept latest $keepCount)")
+            Result.success(prunedCount)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error pruning old wallpapers", e)
+            Result.failure(e)
+        }
+    }
+
+    companion object {
+        const val MAX_HISTORY_WALLPAPERS = 16
     }
 }

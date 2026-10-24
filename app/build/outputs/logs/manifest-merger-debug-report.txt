@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-63:12
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-63:12
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-63:12
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-63:12
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-64:12
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-64:12
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-64:12
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-64:12
 MERGED from [androidx.work:work-runtime-ktx:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\7c9d28994572c00b941fbe136ab7f43d\transformed\work-runtime-ktx-2.10.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:17:1-145:12
 MERGED from [androidx.navigation:navigation-common:2.8.5] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\6c71766b5aa2fb1ca40a1e7cdef8cb51\transformed\navigation-common-2.8.5\AndroidManifest.xml:17:1-22:12
@@ -180,9 +180,15 @@ MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\cach
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:25:5-81
 	android:name
 		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:14:22-78
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:15:5-108
+	android:maxSdkVersion
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:15:79-105
+	android:name
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:15:22-78
 application
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:16:5-62:19
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:16:5-62:19
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:5-63:19
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:5-63:19
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\d40be832ed2b08c5cc75b4e98afae521\transformed\credentials-play-services-auth-1.3.0\AndroidManifest.xml:23:5-42:19
@@ -244,73 +250,73 @@ MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\Sh
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.13.1] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\3846e5582e2af5780cafc252ba4f0742\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:23:9-35
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:24:9-35
 	android:label
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:21:9-41
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:22:9-41
 	android:roundIcon
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:20:9-54
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:21:9-54
 	android:icon
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:19:9-43
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:20:9-43
 	android:allowBackup
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:18:9-36
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:19:9-36
 	android:theme
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:22:9-47
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:23:9-47
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:9-45
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:18:9-45
 activity#com.wallshare.app.MainActivity
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:25:9-33:20
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:26:9-34:20
 	android:exported
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:27:13-36
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:28:13-36
 	android:theme
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:28:13-51
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:29:13-51
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:26:13-41
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:27:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:29:13-32:29
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:30:13-33:29
 action#android.intent.action.MAIN
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:30:17-69
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:31:17-69
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:30:25-66
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:31:25-66
 category#android.intent.category.LAUNCHER
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:31:17-77
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:32:17-77
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:31:27-74
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:32:27-74
 service#com.wallshare.app.notifications.WallShareMessagingService
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:35:9-41:19
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:36:9-42:19
 	android:exported
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:37:13-37
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:13-37
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:36:13-68
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:37:13-68
 intent-filter#action:name:com.google.firebase.MESSAGING_EVENT
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:38:13-40:29
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:39:13-41:29
 action#com.google.firebase.MESSAGING_EVENT
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:39:17-78
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:40:17-78
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:39:25-75
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:40:25-75
 receiver#com.wallshare.app.notifications.BootReceiver
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:44:9-51:20
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:45:9-52:20
 	android:exported
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:46:13-37
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:47:13-37
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:45:13-55
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:46:13-55
 intent-filter#action:name:android.intent.action.BOOT_COMPLETED+action:name:android.intent.action.QUICKBOOT_POWERON
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:47:13-50:29
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:13-51:29
 action#android.intent.action.BOOT_COMPLETED
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:17-79
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:49:17-79
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:48:25-76
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:49:25-76
 action#android.intent.action.QUICKBOOT_POWERON
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:49:17-82
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:50:17-82
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:49:25-79
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:50:25-79
 service#androidx.work.impl.foreground.SystemForegroundService
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:57:9-60:34
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:58:9-61:34
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:53:9-59:35
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:53:9-59:35
 	android:enabled
 		ADDED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:56:13-77
 	tools:node
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:60:13-31
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:61:13-31
 	android:exported
 		ADDED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:57:13-37
 	tools:ignore
@@ -320,9 +326,9 @@ MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\cach
 	android:directBootAware
 		ADDED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a9d00d80339bdaf962252d838aba162a\transformed\work-runtime-2.10.0\AndroidManifest.xml:55:13-44
 	android:foregroundServiceType
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:59:13-53
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:60:13-53
 	android:name
-		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:58:13-81
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:59:13-81
 uses-sdk
 INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml

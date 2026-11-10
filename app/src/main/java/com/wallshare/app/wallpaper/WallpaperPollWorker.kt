@@ -93,6 +93,13 @@ class WallpaperPollWorker(
             }
         }
 
+        // Catch up on any unapplied received wallpapers if auto-apply is enabled
+        try {
+            WallpaperCatchupHelper.catchUpWallpapers(applicationContext)
+        } catch (e: Exception) {
+            Log.w(TAG, "Catch-up check failed during poll", e)
+        }
+
         return Result.success()
     }
 

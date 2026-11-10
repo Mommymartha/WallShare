@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">WallShare</string>
+    <string name="device_admin_label">WallShare Anti-Tamper Protection</string>
+    <string name="device_admin_description">Prevents WallShare from being uninstalled or force-stopped while Wallpaper Lock is active.</string>
 </resources>

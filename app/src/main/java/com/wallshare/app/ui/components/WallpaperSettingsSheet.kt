@@ -1,11 +1,15 @@
 package com.wallshare.app.ui.components
 
 import android.content.Context
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.AdminPanelSettings
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Shield
@@ -20,10 +24,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import com.wallshare.app.WallShareApplication
 import com.wallshare.app.ui.theme.*
 import com.wallshare.app.wallpaper.WallpaperPreferences
+import com.wallshare.app.wallpaper.lock.DeviceAdminHelper
 import com.wallshare.app.wallpaper.lock.WallpaperLockService
 import com.wallshare.app.wallpaper.lock.WallpaperLockVault
 import com.wallshare.app.wallpaper.lock.ui.PinCreateDialog
@@ -37,10 +45,28 @@ fun WallpaperSettingsSheet(
     onDismiss: () -> Unit,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val settings by preferences.settings.collectAsStateWithLifecycle()
     val isLockActive by lockVault.isLockActiveFlow.collectAsStateWithLifecycle()
     var showPinCreateDialog by remember { mutableStateOf(false) }
     var showPinVerifyDialog by remember { mutableStateOf(false) }
+    var showAdminPinVerifyDialog by remember { mutableStateOf(false) }
+    var isDeviceAdminActive by remember { mutableStateOf(DeviceAdminHelper.isAdminActive(context)) }
+
+    // Re-synchronize Device Admin status whenever sheet is displayed/resumed
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        val active = DeviceAdminHelper.isAdminActive(context)
+        isDeviceAdminActive = active
+        lockVault.setDeviceAdminEnabled(active)
+    }
+
+    val adminLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+        val active = DeviceAdminHelper.isAdminActive(context)
+        isDeviceAdminActive = active
+        lockVault.setDeviceAdminEnabled(active)
+    }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -158,7 +184,17 @@ fun WallpaperSettingsSheet(
                 description = "Allow friends to change your home screen wallpaper",
                 icon = Icons.Rounded.Wallpaper,
                 checked = settings.autoApplyHome,
-                onCheckedChange = { preferences.setAutoApplyHome(it) }
+                onCheckedChange = { enabled ->
+                    preferences.setAutoApplyHome(enabled)
+                    if (enabled) {
+                        coroutineScope.launch {
+                            com.wallshare.app.wallpaper.WallpaperCatchupHelper.catchUpWallpapers(
+                                context,
+                                com.wallshare.app.wallpaper.WallpaperTarget.HOME
+                            )
+                        }
+                    }
+                }
             )
 
             HorizontalDivider(
@@ -172,7 +208,17 @@ fun WallpaperSettingsSheet(
                 description = "Allow friends to change your lock screen wallpaper",
                 icon = Icons.Rounded.Lock,
                 checked = settings.autoApplyLock,
-                onCheckedChange = { preferences.setAutoApplyLock(it) }
+                onCheckedChange = { enabled ->
+                    preferences.setAutoApplyLock(enabled)
+                    if (enabled) {
+                        coroutineScope.launch {
+                            com.wallshare.app.wallpaper.WallpaperCatchupHelper.catchUpWallpapers(
+                                context,
+                                com.wallshare.app.wallpaper.WallpaperTarget.LOCK
+                            )
+                        }
+                    }
+                }
             )
 
             HorizontalDivider(
@@ -200,6 +246,45 @@ fun WallpaperSettingsSheet(
                 }
             )
 
+            HorizontalDivider(
+                color = DarkSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.padding(vertical = 12.dp)
+            )
+
+            // Optional Device Admin Option (Uninstall & Force-Stop Protection)
+            SettingToggleItem(
+                title = "Device Admin Protection",
+                description = when {
+                    isDeviceAdminActive ->
+                        "Active: prevents app uninstallation and force-stopping"
+                    !isLockActive ->
+                        "Optional: enable Forced Wallpaper Lock first to activate"
+                    else ->
+                        "Optional: prevent uninstall & force-stop so lock cannot be bypassed"
+                },
+                icon = Icons.Rounded.AdminPanelSettings,
+                checked = isDeviceAdminActive,
+                enabled = isLockActive || isDeviceAdminActive,
+                onCheckedChange = { desiredState ->
+                    if (desiredState) {
+                        if (!isLockActive) {
+                            Toast.makeText(context, "Please enable Forced Wallpaper Lock first", Toast.LENGTH_SHORT).show()
+                        } else {
+                            adminLauncher.launch(DeviceAdminHelper.createAdminPromptIntent(context))
+                        }
+                    } else {
+                        // Turning OFF -> Requires PIN verification if PIN exists
+                        if (lockVault.hasPin()) {
+                            showAdminPinVerifyDialog = true
+                        } else {
+                            DeviceAdminHelper.removeAdmin(context)
+                            lockVault.setDeviceAdminEnabled(false)
+                            isDeviceAdminActive = false
+                        }
+                    }
+                }
+            )
+
             Spacer(modifier = Modifier.height(20.dp))
 
             // Notice about old wallpapers cleanup & lock protection
@@ -209,10 +294,14 @@ fun WallpaperSettingsSheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = if (isLockActive)
-                        "🛡️ Wallpaper Lock is ON: A background enforcer service is guarding your wallpaper. To disable or change wallpapers, turn off the toggle and enter your 4-digit PIN."
-                    else
-                        "🔒 Privacy note: Wallpapers are applied directly via Android's wallpaper service and automatically cleaned up from cloud storage after delivery.",
+                    text = when {
+                        isLockActive && isDeviceAdminActive ->
+                            "🛡️ Wallpaper Lock & Device Admin are ON: WallShare is actively guarding your wallpaper and protected against uninstallation or force-stopping. Enter your PIN to disable."
+                        isLockActive ->
+                            "🛡️ Wallpaper Lock is ON: A background enforcer service is guarding your wallpaper. To disable or change wallpapers, turn off the toggle and enter your 4-digit PIN."
+                        else ->
+                            "🔒 Privacy note: Wallpapers are applied directly via Android's wallpaper service and automatically cleaned up from cloud storage after delivery."
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = if (isLockActive) AccentPrimary else TextSecondary,
                     modifier = Modifier.padding(12.dp)
@@ -243,7 +332,25 @@ fun WallpaperSettingsSheet(
                 lockVault.setLockActive(false)
                 lockVault.clearPin()
                 WallpaperLockService.stop(context)
+                if (DeviceAdminHelper.isAdminActive(context)) {
+                    DeviceAdminHelper.removeAdmin(context)
+                    lockVault.setDeviceAdminEnabled(false)
+                    isDeviceAdminActive = false
+                }
                 showPinVerifyDialog = false
+            }
+        )
+    }
+
+    if (showAdminPinVerifyDialog) {
+        PinVerifyDialog(
+            onDismiss = { showAdminPinVerifyDialog = false },
+            onVerifyPin = { pin -> lockVault.verifyPin(pin) },
+            onSuccess = {
+                DeviceAdminHelper.removeAdmin(context)
+                lockVault.setDeviceAdminEnabled(false)
+                isDeviceAdminActive = false
+                showAdminPinVerifyDialog = false
             }
         )
     }
@@ -255,6 +362,7 @@ private fun SettingToggleItem(
     description: String,
     icon: ImageVector,
     checked: Boolean,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     Row(
@@ -265,13 +373,19 @@ private fun SettingToggleItem(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(if (checked) AccentPrimary.copy(alpha = 0.15f) else DarkSurfaceVariant),
+                .background(
+                    if (!enabled) DarkSurfaceVariant.copy(alpha = 0.5f)
+                    else if (checked) AccentPrimary.copy(alpha = 0.15f)
+                    else DarkSurfaceVariant
+                ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (checked) AccentPrimary else TextSecondary,
+                tint = if (!enabled) TextSecondary.copy(alpha = 0.4f)
+                else if (checked) AccentPrimary
+                else TextSecondary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -282,18 +396,19 @@ private fun SettingToggleItem(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
-                color = TextPrimary,
+                color = if (enabled) TextPrimary else TextSecondary.copy(alpha = 0.6f),
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = if (enabled) TextSecondary else TextSecondary.copy(alpha = 0.4f)
             )
         }
 
         Switch(
             checked = checked,
+            enabled = enabled,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = DarkBackground,
@@ -301,6 +416,10 @@ private fun SettingToggleItem(
                 uncheckedThumbColor = TextSecondary,
                 uncheckedTrackColor = DarkSurfaceVariant,
                 uncheckedBorderColor = Color.Transparent,
+                disabledCheckedThumbColor = DarkBackground.copy(alpha = 0.5f),
+                disabledCheckedTrackColor = AccentPrimary.copy(alpha = 0.5f),
+                disabledUncheckedThumbColor = TextSecondary.copy(alpha = 0.3f),
+                disabledUncheckedTrackColor = DarkSurfaceVariant.copy(alpha = 0.3f),
             )
         )
     }

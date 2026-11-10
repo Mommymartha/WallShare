@@ -215,6 +215,13 @@ private fun WallShareRoot() {
                 } catch (e: Exception) {
                     Log.e("WallShareRoot", "Reconciliation check failed", e)
                 }
+
+                // Catch-up any unapplied received wallpapers if auto-apply is enabled
+                try {
+                    com.wallshare.app.wallpaper.WallpaperCatchupHelper.catchUpWallpapers(context.applicationContext)
+                } catch (e: Exception) {
+                    Log.w("WallShareRoot", "Catch-up check failed", e)
+                }
             }
 
             SignedInHome(

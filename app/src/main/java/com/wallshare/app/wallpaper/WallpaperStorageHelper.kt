@@ -111,6 +111,9 @@ object WallpaperStorageHelper {
                 flags
             )
 
+            val app = context.applicationContext as? com.wallshare.app.WallShareApplication
+            app?.container?.wallpaperPreferences?.recordAppliedWallpaper(target, "applied_${System.currentTimeMillis()}")
+
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to apply wallpaper", e)

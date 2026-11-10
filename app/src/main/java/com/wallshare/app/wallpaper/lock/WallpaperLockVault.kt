@@ -29,6 +29,7 @@ private const val KEY_PIN_SALT = "pin_salt"
 private const val KEY_LATEST_WALLPAPER_PATH = "latest_wallpaper_path"
 private const val KEY_LATEST_HOME_WALLPAPER_PATH = "latest_home_wallpaper_path"
 private const val KEY_LATEST_LOCK_WALLPAPER_PATH = "latest_lock_wallpaper_path"
+private const val KEY_DEVICE_ADMIN_ENABLED = "device_admin_enabled"
 
 data class LockedWallpapers(
     val homeFile: File?,
@@ -71,12 +72,23 @@ class WallpaperLockVault(private val context: Context) {
     private val _isLockActiveFlow = MutableStateFlow(isLockActive())
     val isLockActiveFlow: StateFlow<Boolean> = _isLockActiveFlow.asStateFlow()
 
+    private val _isDeviceAdminEnabledFlow = MutableStateFlow(isDeviceAdminEnabled())
+    val isDeviceAdminEnabledFlow: StateFlow<Boolean> = _isDeviceAdminEnabledFlow.asStateFlow()
+
     fun isLockActive(): Boolean = prefs.getBoolean(KEY_IS_LOCK_ACTIVE, false)
 
     fun setLockActive(active: Boolean) {
         prefs.edit().putBoolean(KEY_IS_LOCK_ACTIVE, active).apply()
         _isLockActiveFlow.value = active
         Log.d(TAG, "Wallpaper lock active set to: $active")
+    }
+
+    fun isDeviceAdminEnabled(): Boolean = prefs.getBoolean(KEY_DEVICE_ADMIN_ENABLED, false)
+
+    fun setDeviceAdminEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DEVICE_ADMIN_ENABLED, enabled).apply()
+        _isDeviceAdminEnabledFlow.value = enabled
+        Log.d(TAG, "Device Admin enabled set to: $enabled")
     }
 
     /**

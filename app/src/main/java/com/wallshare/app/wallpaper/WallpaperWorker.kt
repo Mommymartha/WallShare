@@ -116,6 +116,18 @@ class WallpaperWorker(
 
     companion object {
         const val KEY_REQUEST_ID = "request_id"
+        private const val PREFS_NOTIFICATIONS = "wallshare_notifications"
+        private const val KEY_SHOWN_REQUEST_PREFIX = "notif_shown_"
+
+        fun hasNotificationBeenShown(context: Context, requestId: String): Boolean {
+            val prefs = context.getSharedPreferences(PREFS_NOTIFICATIONS, Context.MODE_PRIVATE)
+            return prefs.getBoolean("$KEY_SHOWN_REQUEST_PREFIX$requestId", false)
+        }
+
+        fun markNotificationShown(context: Context, requestId: String) {
+            val prefs = context.getSharedPreferences(PREFS_NOTIFICATIONS, Context.MODE_PRIVATE)
+            prefs.edit().putBoolean("$KEY_SHOWN_REQUEST_PREFIX$requestId", true).apply()
+        }
 
         private fun createResultChannel(context: Context) {
             val channel = NotificationChannel(
@@ -228,39 +240,94 @@ class WallpaperWorker(
 
         if (which == null) {
             Log.d(TAG, "Wallpaper update for request $requestId skipped: blocked by user settings (target=${request.target}, home=$allowHome, lock=$allowLock)")
-            // Mark request COMPLETED so it isn't repeatedly retried
-            wallpaperRepository.updateStatus(requestId, "COMPLETED")
-            // Prune old wallpapers beyond the history limit
+
+            // 1. Claim the request so status transition adheres to DB trigger (PENDING -> PROCESSING -> COMPLETED)
+            if (request.status == "PENDING") {
+                val processingResult = wallpaperRepository.updateStatus(requestId, "PROCESSING")
+                if (processingResult.isFailure) {
+                    Log.w(TAG, "Could not mark skipped request $requestId as PROCESSING - retrying")
+                    return Result.retry()
+                }
+            }
+
+            val completedResult = wallpaperRepository.updateStatus(requestId, "COMPLETED")
+            if (completedResult.isFailure) {
+                Log.w(TAG, "Could not mark skipped request $requestId as COMPLETED - retrying")
+                return Result.retry()
+            }
+
+            // 2. Download and cache in local storage so it is available in History and Catch-up
+            val targetEnum = when (request.target) {
+                "HOME" -> WallpaperTarget.HOME
+                "LOCK" -> WallpaperTarget.LOCK
+                else -> WallpaperTarget.BOTH
+            }
+            try {
+                val imageBytes = wallpaperRepository.downloadImage(request.image_path)
+                val cachedFile = WallpaperStorageHelper.saveToLocalCache(applicationContext, requestId, imageBytes)
+                if (cachedFile != null) {
+                    container.wallpaperPreferences.recordReceivedWallpaper(
+                        target = targetEnum,
+                        requestId = requestId,
+                        localPath = cachedFile.absolutePath
+                    )
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not pre-cache skipped wallpaper image (non-fatal)", e)
+            }
+
+            // 3. Prune old wallpapers beyond the history limit
             try {
                 wallpaperRepository.pruneOldWallpapers(currentUserId, keepCount = WallpaperRepository.MAX_HISTORY_WALLPAPERS)
             } catch (e: Exception) {
                 Log.w(TAG, "Storage prune non-fatal error for $requestId", e)
             }
 
-            try {
-                createResultChannel(applicationContext)
-                val targetLabel = when (request.target) {
-                    "HOME" -> "home screen"
-                    "LOCK" -> "lock screen"
-                    "BOTH" -> "home & lock screens"
-                    else -> "wallpaper"
+            // 4. Post user-visible notification EXACTLY ONCE
+            if (!hasNotificationBeenShown(applicationContext, requestId)) {
+                try {
+                    createResultChannel(applicationContext)
+                    val targetLabel = when (request.target) {
+                        "HOME" -> "home screen"
+                        "LOCK" -> "lock screen"
+                        "BOTH" -> "home & lock screens"
+                        else -> "wallpaper"
+                    }
+                    val skippedTitle = if (senderHandle != null) {
+                        "Wallpaper from $senderHandle (Paused)"
+                    } else {
+                        "Wallpaper received (Paused)"
+                    }
+
+                    val launchIntent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+                        flags = android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    }
+                    val contentPendingIntent = launchIntent?.let {
+                        android.app.PendingIntent.getActivity(
+                            applicationContext,
+                            requestId.hashCode(),
+                            it,
+                            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                        )
+                    }
+
+                    val skippedNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
+                        .setContentTitle(skippedTitle)
+                        .setContentText("$senderLabel sent you a wallpaper, but auto-apply for $targetLabel is turned off in your settings.")
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setAutoCancel(true)
+                        .setContentIntent(contentPendingIntent)
+                        .build()
+                    applicationContext.getSystemService(NotificationManager::class.java)
+                        .notify(requestId.hashCode(), skippedNotification)
+                    markNotificationShown(applicationContext, requestId)
+                } catch (e: Exception) {
+                    Log.w(TAG, "Could not post skipped notification", e)
                 }
-                val skippedTitle = if (senderHandle != null) {
-                    "Wallpaper from $senderHandle (Paused)"
-                } else {
-                    "Wallpaper received (Paused)"
-                }
-                val skippedNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
-                    .setContentTitle(skippedTitle)
-                    .setContentText("$senderLabel sent you a wallpaper, but auto-apply for $targetLabel is turned off in your settings.")
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setAutoCancel(true)
-                    .build()
-                applicationContext.getSystemService(NotificationManager::class.java)
-                    .notify(requestId.hashCode(), skippedNotification)
-            } catch (e: Exception) {
-                Log.w(TAG, "Could not post skipped notification", e)
+            } else {
+                Log.d(TAG, "Skipped notification already shown for request $requestId - suppressing duplicate")
             }
+
             return Result.success()
         }
 
@@ -285,6 +352,18 @@ class WallpaperWorker(
 
         // Cache image locally so it is immediately accessible in Wallpaper History
         val localCachedFile = WallpaperStorageHelper.saveToLocalCache(applicationContext, requestId, imageBytes)
+        val targetEnum = when (request.target) {
+            "HOME" -> WallpaperTarget.HOME
+            "LOCK" -> WallpaperTarget.LOCK
+            else -> WallpaperTarget.BOTH
+        }
+        if (localCachedFile != null) {
+            container.wallpaperPreferences.recordReceivedWallpaper(
+                target = targetEnum,
+                requestId = requestId,
+                localPath = localCachedFile.absolutePath
+            )
+        }
 
         // 4. Decode image (Terminal failure if corrupt)
         val bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
@@ -353,6 +432,12 @@ class WallpaperWorker(
                 localCachedFile?.absolutePath,
                 which
             )
+
+            // Mark wallpaper applied for target screen(s)
+            container.wallpaperPreferences.recordAppliedWallpaper(
+                target = targetEnum,
+                requestId = requestId
+            )
         } finally {
             if (wakeLock.isHeld) wakeLock.release()
         }
@@ -373,48 +458,53 @@ class WallpaperWorker(
             Log.w(TAG, "Pruning old wallpapers failed (non-fatal)", e)
         }
 
-        // 8. Post a user-visible notification confirming the wallpaper was applied.
-        try {
-            createResultChannel(applicationContext)
-            val targetLabel = when {
-                request.target == "BOTH" && !allowLock -> "home screen (lock screen paused)"
-                request.target == "BOTH" && !allowHome -> "lock screen (home screen paused)"
-                which == (WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) -> "home & lock screens"
-                which == WallpaperManager.FLAG_SYSTEM -> "home screen"
-                which == WallpaperManager.FLAG_LOCK -> "lock screen"
-                else -> "wallpaper"
-            }
-            val title = if (senderHandle != null) {
-                "New wallpaper from $senderHandle! \uD83C\uDF1F"
-            } else {
-                "New wallpaper applied! \uD83C\uDF1F"
-            }
-            val contentText = "$senderLabel just updated your $targetLabel."
+        // 8. Post a user-visible notification confirming the wallpaper was applied (EXACTLY ONCE)
+        if (!hasNotificationBeenShown(applicationContext, requestId)) {
+            try {
+                createResultChannel(applicationContext)
+                val targetLabel = when {
+                    request.target == "BOTH" && !allowLock -> "home screen (lock screen paused)"
+                    request.target == "BOTH" && !allowHome -> "lock screen (home screen paused)"
+                    which == (WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) -> "home & lock screens"
+                    which == WallpaperManager.FLAG_SYSTEM -> "home screen"
+                    which == WallpaperManager.FLAG_LOCK -> "lock screen"
+                    else -> "wallpaper"
+                }
+                val title = if (senderHandle != null) {
+                    "New wallpaper from $senderHandle! \uD83C\uDF1F"
+                } else {
+                    "New wallpaper applied! \uD83C\uDF1F"
+                }
+                val contentText = "$senderLabel just updated your $targetLabel."
 
-            val launchIntent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
-                flags = android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
-            val contentPendingIntent = launchIntent?.let {
-                android.app.PendingIntent.getActivity(
-                    applicationContext,
-                    requestId.hashCode(),
-                    it,
-                    android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-                )
-            }
+                val launchIntent = applicationContext.packageManager.getLaunchIntentForPackage(applicationContext.packageName)?.apply {
+                    flags = android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                val contentPendingIntent = launchIntent?.let {
+                    android.app.PendingIntent.getActivity(
+                        applicationContext,
+                        requestId.hashCode(),
+                        it,
+                        android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+                    )
+                }
 
-            val resultNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
-                .setContentTitle(title)
-                .setContentText(contentText)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setAutoCancel(true)
-                .setContentIntent(contentPendingIntent)
-                .build()
-            applicationContext.getSystemService(NotificationManager::class.java)
-                .notify(requestId.hashCode(), resultNotification)
-        } catch (e: Exception) {
-            // Non-fatal: the wallpaper was applied, this is just a courtesy notification
-            Log.w(TAG, "Could not post result notification", e)
+                val resultNotification = NotificationCompat.Builder(applicationContext, RESULT_CHANNEL_ID)
+                    .setContentTitle(title)
+                    .setContentText(contentText)
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setAutoCancel(true)
+                    .setContentIntent(contentPendingIntent)
+                    .build()
+                applicationContext.getSystemService(NotificationManager::class.java)
+                    .notify(requestId.hashCode(), resultNotification)
+                markNotificationShown(applicationContext, requestId)
+            } catch (e: Exception) {
+                // Non-fatal: the wallpaper was applied, this is just a courtesy notification
+                Log.w(TAG, "Could not post result notification", e)
+            }
+        } else {
+            Log.d(TAG, "Result notification already shown for request $requestId - suppressing duplicate")
         }
 
         Log.d(TAG, "Wallpaper request $requestId completed successfully")

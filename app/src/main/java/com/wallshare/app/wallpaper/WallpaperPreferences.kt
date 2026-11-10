@@ -48,8 +48,76 @@ class WallpaperPreferences(context: Context) {
 
     fun getSettings(): WallpaperSettings = loadSettings()
 
+    fun recordReceivedWallpaper(target: WallpaperTarget, requestId: String, localPath: String) {
+        val editor = prefs.edit()
+        if (target == WallpaperTarget.HOME || target == WallpaperTarget.BOTH) {
+            editor.putString(KEY_LATEST_RECEIVED_HOME_ID, requestId)
+            editor.putString(KEY_LATEST_RECEIVED_HOME_PATH, localPath)
+        }
+        if (target == WallpaperTarget.LOCK || target == WallpaperTarget.BOTH) {
+            editor.putString(KEY_LATEST_RECEIVED_LOCK_ID, requestId)
+            editor.putString(KEY_LATEST_RECEIVED_LOCK_PATH, localPath)
+        }
+        editor.apply()
+    }
+
+    fun recordAppliedWallpaper(target: WallpaperTarget, requestId: String) {
+        val editor = prefs.edit()
+        if (target == WallpaperTarget.HOME || target == WallpaperTarget.BOTH) {
+            editor.putString(KEY_LATEST_APPLIED_HOME_ID, requestId)
+        }
+        if (target == WallpaperTarget.LOCK || target == WallpaperTarget.BOTH) {
+            editor.putString(KEY_LATEST_APPLIED_LOCK_ID, requestId)
+        }
+        editor.apply()
+    }
+
+    fun hasUnappliedHomeWallpaper(): Boolean {
+        val received = prefs.getString(KEY_LATEST_RECEIVED_HOME_ID, null) ?: return false
+        val applied = prefs.getString(KEY_LATEST_APPLIED_HOME_ID, null)
+        return received != applied
+    }
+
+    fun getLatestReceivedHomeWallpaperPath(): String? {
+        return prefs.getString(KEY_LATEST_RECEIVED_HOME_PATH, null)
+    }
+
+    fun getLatestReceivedHomeRequestId(): String? {
+        return prefs.getString(KEY_LATEST_RECEIVED_HOME_ID, null)
+    }
+
+    fun getLatestAppliedHomeId(): String? {
+        return prefs.getString(KEY_LATEST_APPLIED_HOME_ID, null)
+    }
+
+    fun hasUnappliedLockWallpaper(): Boolean {
+        val received = prefs.getString(KEY_LATEST_RECEIVED_LOCK_ID, null) ?: return false
+        val applied = prefs.getString(KEY_LATEST_APPLIED_LOCK_ID, null)
+        return received != applied
+    }
+
+    fun getLatestReceivedLockWallpaperPath(): String? {
+        return prefs.getString(KEY_LATEST_RECEIVED_LOCK_PATH, null)
+    }
+
+    fun getLatestReceivedLockRequestId(): String? {
+        return prefs.getString(KEY_LATEST_RECEIVED_LOCK_ID, null)
+    }
+
+    fun getLatestAppliedLockId(): String? {
+        return prefs.getString(KEY_LATEST_APPLIED_LOCK_ID, null)
+    }
+
     companion object {
         private const val KEY_AUTO_APPLY_HOME = "auto_apply_home"
         private const val KEY_AUTO_APPLY_LOCK = "auto_apply_lock"
+
+        private const val KEY_LATEST_RECEIVED_HOME_ID = "latest_received_home_id"
+        private const val KEY_LATEST_RECEIVED_HOME_PATH = "latest_received_home_path"
+        private const val KEY_LATEST_APPLIED_HOME_ID = "latest_applied_home_id"
+
+        private const val KEY_LATEST_RECEIVED_LOCK_ID = "latest_received_lock_id"
+        private const val KEY_LATEST_RECEIVED_LOCK_PATH = "latest_received_lock_path"
+        private const val KEY_LATEST_APPLIED_LOCK_ID = "latest_applied_lock_id"
     }
 }

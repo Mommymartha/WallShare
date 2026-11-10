@@ -6,7 +6,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.app.WallpaperColors
 import android.app.WallpaperManager
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -33,7 +32,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.File
-import java.util.concurrent.atomic.AtomicInteger
 
 private const val TAG = "WallpaperLockService"
 private const val NOTIFICATION_ID = 9001

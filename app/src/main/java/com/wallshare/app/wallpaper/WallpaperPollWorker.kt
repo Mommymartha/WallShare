@@ -12,6 +12,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.wallshare.app.WallShareApplication
+import com.wallshare.app.wallpaper.WallpaperCatchupHelper
 import io.github.jan.supabase.auth.auth
 
 private const val TAG = "WallpaperPollWorker"

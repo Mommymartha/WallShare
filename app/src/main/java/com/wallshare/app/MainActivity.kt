@@ -69,17 +69,12 @@ import com.wallshare.app.ui.theme.ErrorRed
 import com.wallshare.app.ui.theme.TextPrimary
 import com.wallshare.app.ui.theme.TextSecondary
 import com.wallshare.app.ui.theme.WallShareTheme
+import com.wallshare.app.wallpaper.WallpaperCatchupHelper
 import com.wallshare.app.wallpaper.WallpaperHistoryViewModel
 import com.wallshare.app.wallpaper.WallpaperViewModel
+import com.wallshare.app.wallpaper.WallpaperWorker
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.wallshare.app.wallpaper.WallpaperWorker
 
 /**
  * Thin host for the Compose UI. Routes between auth states only - all actual
@@ -218,7 +213,7 @@ private fun WallShareRoot() {
 
                 // Catch-up any unapplied received wallpapers if auto-apply is enabled
                 try {
-                    com.wallshare.app.wallpaper.WallpaperCatchupHelper.catchUpWallpapers(context.applicationContext)
+                    WallpaperCatchupHelper.catchUpWallpapers(context.applicationContext)
                 } catch (e: Exception) {
                     Log.w("WallShareRoot", "Catch-up check failed", e)
                 }

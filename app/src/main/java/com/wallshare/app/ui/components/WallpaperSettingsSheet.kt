@@ -30,7 +30,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import com.wallshare.app.WallShareApplication
 import com.wallshare.app.ui.theme.*
+import com.wallshare.app.wallpaper.WallpaperCatchupHelper
 import com.wallshare.app.wallpaper.WallpaperPreferences
+import com.wallshare.app.wallpaper.WallpaperTarget
 import com.wallshare.app.wallpaper.lock.DeviceAdminHelper
 import com.wallshare.app.wallpaper.lock.WallpaperLockService
 import com.wallshare.app.wallpaper.lock.WallpaperLockVault
@@ -188,9 +190,9 @@ fun WallpaperSettingsSheet(
                     preferences.setAutoApplyHome(enabled)
                     if (enabled) {
                         coroutineScope.launch {
-                            com.wallshare.app.wallpaper.WallpaperCatchupHelper.catchUpWallpapers(
+                            WallpaperCatchupHelper.catchUpWallpapers(
                                 context,
-                                com.wallshare.app.wallpaper.WallpaperTarget.HOME
+                                WallpaperTarget.HOME
                             )
                         }
                     }
@@ -212,9 +214,9 @@ fun WallpaperSettingsSheet(
                     preferences.setAutoApplyLock(enabled)
                     if (enabled) {
                         coroutineScope.launch {
-                            com.wallshare.app.wallpaper.WallpaperCatchupHelper.catchUpWallpapers(
+                            WallpaperCatchupHelper.catchUpWallpapers(
                                 context,
-                                com.wallshare.app.wallpaper.WallpaperTarget.LOCK
+                                WallpaperTarget.LOCK
                             )
                         }
                     }

@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-80:12
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-80:12
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-80:12
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-80:12
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-96:12
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-96:12
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-96:12
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:2:1-96:12
 MERGED from [androidx.work:work-runtime-ktx:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\a1ab8b4a48e33d1ec2e12e6bb5e58786\transformed\work-runtime-ktx-2.10.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\e7ec8576c561bc20d6dc7be9a7c93bb5\transformed\work-runtime-2.10.0\AndroidManifest.xml:17:1-145:12
 MERGED from [androidx.navigation:navigation-common:2.8.5] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\05f92f76fb3f699496ffb0c228bd7fde\transformed\navigation-common-2.8.5\AndroidManifest.xml:17:1-22:12
@@ -188,8 +188,8 @@ ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\
 	android:name
 		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:15:22-78
 application
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:5-79:19
-INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:5-79:19
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:5-95:19
+INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:17:5-95:19
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\e7ec8576c561bc20d6dc7be9a7c93bb5\transformed\work-runtime-2.10.0\AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.work:work-runtime:2.10.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\e7ec8576c561bc20d6dc7be9a7c93bb5\transformed\work-runtime-2.10.0\AndroidManifest.xml:28:5-143:19
 MERGED from [androidx.credentials:credentials-play-services-auth:1.3.0] C:\Users\Shavez Ali\.gradle\caches\8.13\transforms\b51e11c07597599427c97422f0156c28\transformed\credentials-play-services-auth-1.3.0\AndroidManifest.xml:23:5-42:19
@@ -339,21 +339,49 @@ ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\
 	android:name
 		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:65:13-64
 receiver#com.wallshare.app.wallpaper.lock.WallpaperLockReviverReceiver
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:70:9-77:20
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:70:9-78:20
 	android:exported
 		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:72:13-37
 	android:name
 		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:71:13-72
-intent-filter#action:name:android.intent.action.USER_PRESENT+action:name:com.wallshare.app.REVIVE_WALLPAPER_LOCK
-ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:73:13-76:29
+intent-filter#action:name:android.intent.action.USER_PRESENT+action:name:android.intent.action.WALLPAPER_CHANGED+action:name:com.wallshare.app.REVIVE_WALLPAPER_LOCK
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:73:13-77:29
 action#android.intent.action.USER_PRESENT
 ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:74:17-77
 	android:name
 		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:74:25-74
-action#com.wallshare.app.REVIVE_WALLPAPER_LOCK
+action#android.intent.action.WALLPAPER_CHANGED
 ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:75:17-82
 	android:name
 		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:75:25-79
+action#com.wallshare.app.REVIVE_WALLPAPER_LOCK
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:76:17-82
+	android:name
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:76:25-79
+receiver#com.wallshare.app.wallpaper.lock.WallShareDeviceAdminReceiver
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:81:9-93:20
+	android:label
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:83:13-55
+	android:exported
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:86:13-36
+	android:permission
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:85:13-70
+	android:description
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:84:13-67
+	android:name
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:82:13-72
+meta-data#android.app.device_admin
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:87:13-89:56
+	android:resource
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:89:17-53
+	android:name
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:88:17-56
+intent-filter#action:name:android.app.action.DEVICE_ADMIN_ENABLED
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:90:13-92:29
+action#android.app.action.DEVICE_ADMIN_ENABLED
+ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:91:17-82
+	android:name
+		ADDED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml:91:25-79
 uses-sdk
 INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from C:\Users\Shavez Ali\OneDrive\Documents\project\project\WallShare\app\src\main\AndroidManifest.xml

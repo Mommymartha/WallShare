@@ -24,6 +24,10 @@ class WallpaperLockReviverReceiver : BroadcastReceiver() {
         try {
             val vault = WallpaperLockVault(context)
             if (vault.isLockActive()) {
+                if (WallpaperLockService.isSelfUpdateActive()) {
+                    Log.d(TAG, "Self-update active, ignoring reviver trigger")
+                    return
+                }
                 Log.i(TAG, "Lock is active — ensuring WallpaperLockService is running")
                 WallpaperLockService.start(context)
             } else {

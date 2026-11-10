@@ -306,6 +306,8 @@ string common_signin_button_text_long
 string copy_toast_msg
 string default_error_message
 string default_popup_window_title
+string device_admin_description
+string device_admin_label
 string dropdown_menu
 string fallback_menu_item_copy_link
 string fallback_menu_item_open_in_browser
@@ -427,4 +429,5 @@ styleable Navigator android_label android_id route
 styleable SignInButton buttonSize colorScheme scopeUris
 styleable StateListDrawable android_dither android_visible android_variablePadding android_constantSize android_enterFadeDuration android_exitFadeDuration
 styleable StateListDrawableItem android_drawable
+xml device_admin
 xml image_share_filepaths

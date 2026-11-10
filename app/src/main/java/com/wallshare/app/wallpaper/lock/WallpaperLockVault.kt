@@ -227,6 +227,16 @@ class WallpaperLockVault(private val context: Context) {
                 success = true
             }
 
+            // If lock screen mirrors home (getWallpaperId(FLAG_LOCK) == -1), sync lock target as well
+            val wm = WallpaperManager.getInstance(context)
+            val lockId = try { wm.getWallpaperId(WallpaperManager.FLAG_LOCK) } catch (e: Exception) { -1 }
+            if (lockId == -1 && (which and WallpaperManager.FLAG_SYSTEM) != 0) {
+                val targetFile = getLockedLockWallpaperFile()
+                copyFileAtomically(sourceFile, targetFile)
+                saveLatestLockWallpaperPath(targetFile.absolutePath)
+                Log.d(TAG, "Lock mirrors home — synced locked LOCK wallpaper to home image: ${targetFile.absolutePath}")
+            }
+
             success
         } catch (e: Exception) {
             Log.e(TAG, "Failed to update locked wallpaper file (which=$which)", e)
@@ -260,6 +270,16 @@ class WallpaperLockVault(private val context: Context) {
                 saveLatestLockWallpaperPath(targetFile.absolutePath)
                 Log.d(TAG, "Locked LOCK wallpaper updated from bitmap")
                 success = true
+            }
+
+            // If lock screen mirrors home (getWallpaperId(FLAG_LOCK) == -1), sync lock target as well
+            val wm = WallpaperManager.getInstance(context)
+            val lockId = try { wm.getWallpaperId(WallpaperManager.FLAG_LOCK) } catch (e: Exception) { -1 }
+            if (lockId == -1 && (which and WallpaperManager.FLAG_SYSTEM) != 0) {
+                val targetFile = getLockedLockWallpaperFile()
+                writeBitmapAtomically(bitmap, targetFile)
+                saveLatestLockWallpaperPath(targetFile.absolutePath)
+                Log.d(TAG, "Lock mirrors home — synced locked LOCK bitmap to home bitmap")
             }
 
             success

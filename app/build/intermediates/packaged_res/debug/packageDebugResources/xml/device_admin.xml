@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<device-admin>
+    <!--
+        WallShare Device Admin policy declaration.
+        We request no special policies — we only use the device admin
+        privilege to prevent the app from being uninstalled or force-stopped
+        while the Forced Wallpaper Lock feature is active.
+    -->
+    <uses-policies />
+</device-admin>
+

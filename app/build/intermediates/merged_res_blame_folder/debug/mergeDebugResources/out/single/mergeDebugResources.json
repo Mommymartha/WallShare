@@ -1,18 +1,22 @@
 [
     {
-        "merged": "com.wallshare.app-debug-76:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "com.wallshare.app-main-78:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "com.wallshare.app-debug-76:/xml_device_admin.xml.flat",
+        "source": "com.wallshare.app-main-78:/xml/device_admin.xml"
     },
     {
-        "merged": "com.wallshare.app-debug-76:/drawable_ic_launcher_background.xml.flat",
-        "source": "com.wallshare.app-main-78:/drawable/ic_launcher_background.xml"
+        "merged": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-debug-76:\\drawable_ic_launcher_background.xml.flat",
+        "source": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-main-78:\\drawable\\ic_launcher_background.xml"
     },
     {
-        "merged": "com.wallshare.app-debug-76:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "com.wallshare.app-main-78:/mipmap-anydpi-v26/ic_launcher_round.xml"
+        "merged": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-debug-76:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-main-78:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
     },
     {
-        "merged": "com.wallshare.app-debug-76:/drawable_ic_launcher_foreground.xml.flat",
-        "source": "com.wallshare.app-main-78:/drawable/ic_launcher_foreground.xml"
+        "merged": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-debug-76:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-main-78:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-debug-76:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\Shavez Ali\\.gradle\\daemon\\8.13\\com.wallshare.app-main-78:\\mipmap-anydpi-v26\\ic_launcher.xml"
     }
 ]

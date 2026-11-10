@@ -362,6 +362,22 @@ class WallpaperLockVault(private val context: Context) {
             saveLatestLockWallpaperPath(lockTarget.absolutePath)
         }
 
+        // Seed current wallpaper IDs if not already saved, so enforcement
+        // and ID-polling work immediately even before receiving wallpapers from friends
+        try {
+            val wm = WallpaperManager.getInstance(context)
+            if (getLastAppliedSystemId() == -1) {
+                val sysId = wm.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+                if (sysId != -1) saveLastAppliedSystemId(sysId)
+            }
+            if (getLastAppliedLockId() == -1) {
+                val lockId = wm.getWallpaperId(WallpaperManager.FLAG_LOCK)
+                if (lockId != -1) saveLastAppliedLockId(lockId)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to seed wallpaper IDs during ensureLockedWallpapersReady", e)
+        }
+
         val resolvedHome = if (homeReady && homeTarget.exists() && homeTarget.length() > 0L) homeTarget else null
         val resolvedLock = if (lockReady && lockTarget.exists() && lockTarget.length() > 0L) lockTarget else null
 

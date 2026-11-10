@@ -8,8 +8,10 @@ import android.app.PendingIntent
 import android.app.Service
 import android.app.WallpaperColors
 import android.app.WallpaperManager
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -36,10 +38,16 @@ import java.util.concurrent.atomic.AtomicInteger
 private const val TAG = "WallpaperLockService"
 private const val NOTIFICATION_ID = 9001
 private const val CHANNEL_ID = "wallshare_lock_enforcer"
+private const val POLL_INTERVAL_MS = 3000L
 
 /**
  * The Enforcer: A high-resilience Foreground Service that guards the user's wallpaper
  * against unauthorized manual changes while seamlessly accepting incoming wallpapers from friends.
+ *
+ * Uses THREE independent detection layers:
+ * 1. OnColorsChangedListener (API 27+) — fastest, fires on wallpaper color changes
+ * 2. ACTION_WALLPAPER_CHANGED BroadcastReceiver — reliable system broadcast
+ * 3. Periodic wallpaper ID polling (every 3s) — last-resort safety net
  */
 class WallpaperLockService : Service() {
 
@@ -49,7 +57,9 @@ class WallpaperLockService : Service() {
     private lateinit var vault: WallpaperLockVault
 
     private var colorsListener: WallpaperManager.OnColorsChangedListener? = null
+    private var wallpaperChangedReceiver: BroadcastReceiver? = null
     private val enforcementMutex = Mutex()
+    private var pollingRunnable: Runnable? = null
 
     companion object {
         @Volatile
@@ -181,8 +191,10 @@ class WallpaperLockService : Service() {
         createNotificationChannel()
         startServiceForeground()
         registerWallpaperListener()
+        registerWallpaperChangedReceiver()
+        startWallpaperIdPolling()
         checkWallpaperIntegrityOnStart()
-        Log.i(TAG, "WallpaperLockService created and enforcer active")
+        Log.i(TAG, "WallpaperLockService created — 3-layer enforcer active (colors listener + broadcast + polling)")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -239,6 +251,8 @@ class WallpaperLockService : Service() {
     }
 
     override fun onDestroy() {
+        stopWallpaperIdPolling()
+        unregisterWallpaperChangedReceiver()
         unregisterWallpaperListener()
         serviceScope.cancel()
 
@@ -280,6 +294,100 @@ class WallpaperLockService : Service() {
         }
     }
 
+    // ─── Layer 2: ACTION_WALLPAPER_CHANGED BroadcastReceiver ───────────────────
+
+    private fun registerWallpaperChangedReceiver() {
+        wallpaperChangedReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                Log.d(TAG, "ACTION_WALLPAPER_CHANGED broadcast received")
+                val both = WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
+                checkAndEnforceWallpaper(both, "wallpaper_changed_broadcast")
+            }
+        }
+        try {
+            val filter = IntentFilter(Intent.ACTION_WALLPAPER_CHANGED)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(wallpaperChangedReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(wallpaperChangedReceiver, filter)
+            }
+            Log.d(TAG, "ACTION_WALLPAPER_CHANGED receiver registered")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to register ACTION_WALLPAPER_CHANGED receiver", e)
+        }
+    }
+
+    private fun unregisterWallpaperChangedReceiver() {
+        wallpaperChangedReceiver?.let {
+            try {
+                unregisterReceiver(it)
+                wallpaperChangedReceiver = null
+                Log.d(TAG, "ACTION_WALLPAPER_CHANGED receiver unregistered")
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to unregister wallpaper changed receiver", e)
+            }
+        }
+    }
+
+    // ─── Layer 3: Periodic Wallpaper ID Polling ────────────────────────────────
+
+    private fun startWallpaperIdPolling() {
+        stopWallpaperIdPolling()
+        pollingRunnable = object : Runnable {
+            override fun run() {
+                if (!vault.isLockActive()) {
+                    Log.d(TAG, "Polling: Lock no longer active, stopping poll cycle")
+                    return
+                }
+                pollWallpaperIds()
+                mainHandler.postDelayed(this, POLL_INTERVAL_MS)
+            }
+        }
+        mainHandler.postDelayed(pollingRunnable!!, POLL_INTERVAL_MS)
+        Log.d(TAG, "Wallpaper ID polling started (every ${POLL_INTERVAL_MS}ms)")
+    }
+
+    private fun stopWallpaperIdPolling() {
+        pollingRunnable?.let {
+            mainHandler.removeCallbacks(it)
+            pollingRunnable = null
+            Log.d(TAG, "Wallpaper ID polling stopped")
+        }
+    }
+
+    private fun pollWallpaperIds() {
+        try {
+            if (isSelfUpdateActive()) return
+
+            val curSysId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+            val curLockId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
+            val lastSysId = vault.getLastAppliedSystemId()
+            val lastLockId = vault.getLastAppliedLockId()
+
+            var whichChanged = 0
+            if (lastSysId != -1 && curSysId != -1 && curSysId != lastSysId) {
+                whichChanged = whichChanged or WallpaperManager.FLAG_SYSTEM
+            } else if (lastSysId == -1 && curSysId != -1) {
+                // Seed initial ID
+                vault.saveLastAppliedSystemId(curSysId)
+            }
+
+            if (lastLockId != -1 && curLockId != -1 && curLockId != lastLockId) {
+                whichChanged = whichChanged or WallpaperManager.FLAG_LOCK
+            } else if (lastLockId == -1 && curLockId != -1) {
+                // Seed initial ID
+                vault.saveLastAppliedLockId(curLockId)
+            }
+
+            if (whichChanged != 0) {
+                Log.w(TAG, "Polling detected wallpaper ID mismatch! sys(stored=$lastSysId, current=$curSysId) lock(stored=$lastLockId, current=$curLockId)")
+                checkAndEnforceWallpaper(whichChanged, "id_poll")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error during wallpaper ID poll", e)
+        }
+    }
+
     private fun checkAndEnforceWallpaper(which: Int, triggerReason: String) {
         if (!vault.isLockActive()) {
             Log.d(TAG, "Lock inactive, ignoring check and stopping service")
@@ -290,11 +398,25 @@ class WallpaperLockService : Service() {
         // If WallShare is currently applying a wallpaper or within the settling window, allow it through
         if (isSelfUpdateActive()) {
             Log.d(TAG, "Wallpaper change was self-applied by WallShare ($triggerReason, which=$which) — allowing update through")
+            // Update stored IDs so polling doesn't detect stale mismatch after self-update settles
+            if (triggerReason != "id_poll") {
+                mainHandler.postDelayed({
+                    try {
+                        val newSysId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+                        val newLockId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
+                        if (newSysId != -1) vault.saveLastAppliedSystemId(newSysId)
+                        if (newLockId != -1) vault.saveLastAppliedLockId(newLockId)
+                        Log.d(TAG, "Post-self-update IDs synced: sys=$newSysId, lock=$newLockId")
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to sync post-self-update IDs", e)
+                    }
+                }, 1500L)
+            }
             return
         }
 
         // Otherwise, it is an UNAUTHORIZED manual change by the user! Revert immediately!
-        Log.w(TAG, "Unauthorized manual wallpaper change detected ($triggerReason, which=$which)! Enforcing locked wallpaper...")
+        Log.w(TAG, "⚠ UNAUTHORIZED wallpaper change detected ($triggerReason, which=$which)! Enforcing locked wallpaper...")
         enforceLockedWallpaper(which)
     }
 
@@ -320,8 +442,16 @@ class WallpaperLockService : Service() {
                     val homeFile = lockedFiles.homeFile
                     val lockFile = lockedFiles.lockFile
 
-                    // Arm window for 2500ms so our own revert does not re-trigger enforcement or loop
-                    armSelfUpdateWindow(2500L)
+                    Log.d(TAG, "Locked files: home=${homeFile?.absolutePath ?: "NONE"} (${homeFile?.length() ?: 0}B), lock=${lockFile?.absolutePath ?: "NONE"} (${lockFile?.length() ?: 0}B)")
+
+                    if (homeFile == null && lockFile == null) {
+                        Log.e(TAG, "CRITICAL: No locked wallpaper files available! Cannot enforce.")
+                        return@launch
+                    }
+
+                    // Arm window for 5s so our own revert does not re-trigger enforcement or loop
+                    // (needs to cover setBitmap + trailing OnColorsChanged + next poll cycle)
+                    armSelfUpdateWindow(5000L)
 
                     var targetWhich = whichToEnforce
                     if (targetWhich == 0) {

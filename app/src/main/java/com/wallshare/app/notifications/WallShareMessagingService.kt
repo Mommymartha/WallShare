@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import androidx.work.Constraints
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
@@ -78,32 +79,40 @@ class WallShareMessagingService : FirebaseMessagingService() {
             android.os.PowerManager.PARTIAL_WAKE_LOCK,
             "WallShare::FCMImmediateApply"
         )
-        wakeLock.acquire(45_000L)
+        wakeLock.acquire(60_000L)
 
-        // 2. Immediately execute in background serviceScope without waiting for WorkManager or app launch!
-        serviceScope.launch {
-            try {
-                Log.i(TAG, "Starting immediate background apply for request $requestId...")
-                val result = WallpaperWorker.executeWallpaperRequest(applicationContext, requestId)
-                Log.i(TAG, "Immediate background apply finished with result: $result")
-            } catch (e: Exception) {
-                Log.e(TAG, "Immediate apply encountered error; enqueuing WorkManager fallback", e)
-                val workRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
-                    .setInputData(workDataOf(WallpaperWorker.KEY_REQUEST_ID to requestId))
-                    .setConstraints(
-                        Constraints.Builder()
-                            .setRequiredNetworkType(NetworkType.CONNECTED)
-                            .build(),
+        // 2. CRITICAL: onMessageReceived is executed on Firebase's dedicated worker thread.
+        // We MUST run synchronously using runBlocking so that onMessageReceived does NOT return
+        // prematurely to Google Play Services. If onMessageReceived returns while a coroutine is
+        // running asynchronously, Google Play Services calls stopSelf(), destroying this service
+        // and killing the background download/wallpaper apply coroutine!
+        try {
+            runBlocking {
+                try {
+                    Log.i(TAG, "Starting synchronous background apply for request $requestId...")
+                    val result = WallpaperWorker.executeWallpaperRequest(applicationContext, requestId)
+                    Log.i(TAG, "Synchronous background apply finished with result: $result")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Immediate apply encountered error; enqueuing WorkManager fallback", e)
+                    val workRequest = OneTimeWorkRequestBuilder<WallpaperWorker>()
+                        .setInputData(workDataOf(WallpaperWorker.KEY_REQUEST_ID to requestId))
+                        .setConstraints(
+                            Constraints.Builder()
+                                .setRequiredNetworkType(NetworkType.CONNECTED)
+                                .build(),
+                        )
+                        .build()
+
+                    WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+                        "wallpaper-$requestId",
+                        ExistingWorkPolicy.REPLACE,
+                        workRequest,
                     )
-                    .build()
-
-                WorkManager.getInstance(applicationContext).enqueueUniqueWork(
-                    "wallpaper-$requestId",
-                    ExistingWorkPolicy.REPLACE,
-                    workRequest,
-                )
-            } finally {
-                if (wakeLock.isHeld) wakeLock.release()
+                }
+            }
+        } finally {
+            if (wakeLock.isHeld) {
+                wakeLock.release()
             }
         }
     }

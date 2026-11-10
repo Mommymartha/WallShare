@@ -95,7 +95,8 @@ object WallpaperStorageHelper {
                 }
                 com.wallshare.app.wallpaper.lock.WallpaperLockService.prepareForIncomingWallpaper(
                     context,
-                    tempFile.absolutePath
+                    tempFile.absolutePath,
+                    flags
                 )
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to pre-stage manual wallpaper to lock service", e)
@@ -106,7 +107,8 @@ object WallpaperStorageHelper {
             // Sync new wallpaper IDs
             com.wallshare.app.wallpaper.lock.WallpaperLockService.notifySelfWallpaperApplied(
                 context,
-                tempFile.absolutePath
+                tempFile.absolutePath,
+                flags
             )
 
             true

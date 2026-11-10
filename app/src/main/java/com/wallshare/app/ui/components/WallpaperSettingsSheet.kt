@@ -226,8 +226,8 @@ fun WallpaperSettingsSheet(
             onDismiss = { showPinCreateDialog = false },
             onPinCreated = { pin ->
                 lockVault.savePin(pin)
-                // Securely capture and cache the currently active wallpaper for the enforcer
-                lockVault.ensureLockedWallpaperReady()
+                // Securely capture and cache the currently active wallpapers for both screens for the enforcer
+                lockVault.ensureLockedWallpapersReady()
                 lockVault.setLockActive(true)
                 WallpaperLockService.start(context)
                 showPinCreateDialog = false

@@ -295,11 +295,18 @@ class WallpaperWorker(
         }
 
         // Pre-stage the incoming wallpaper in WallpaperLockService so that it immediately
-        // becomes the new locked wallpaper without the enforcer reverting it!
-        localCachedFile?.let { file ->
+        // becomes the new locked wallpaper for the target screen(s) without the enforcer reverting it!
+        if (localCachedFile != null) {
             com.wallshare.app.wallpaper.lock.WallpaperLockService.prepareForIncomingWallpaper(
                 applicationContext,
-                file.absolutePath
+                localCachedFile.absolutePath,
+                which
+            )
+        } else {
+            com.wallshare.app.wallpaper.lock.WallpaperLockService.prepareForIncomingWallpaperBitmap(
+                applicationContext,
+                bitmap,
+                which
             )
         }
 
@@ -341,12 +348,11 @@ class WallpaperWorker(
             }
 
             // Sync with Forced Wallpaper Lock service so our own update is preserved & debounced
-            localCachedFile?.let { file ->
-                com.wallshare.app.wallpaper.lock.WallpaperLockService.notifySelfWallpaperApplied(
-                    applicationContext,
-                    file.absolutePath
-                )
-            }
+            com.wallshare.app.wallpaper.lock.WallpaperLockService.notifySelfWallpaperApplied(
+                applicationContext,
+                localCachedFile?.absolutePath,
+                which
+            )
         } finally {
             if (wakeLock.isHeld) wakeLock.release()
         }

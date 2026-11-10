@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger
 private const val TAG = "WallpaperLockService"
 private const val NOTIFICATION_ID = 9001
 private const val CHANNEL_ID = "wallshare_lock_enforcer"
-private const val POLL_INTERVAL_MS = 3000L
+private const val POLL_INTERVAL_MS = 2000L
 
 /**
  * The Enforcer: A high-resilience Foreground Service that guards the user's wallpaper
@@ -47,7 +47,7 @@ private const val POLL_INTERVAL_MS = 3000L
  * Uses THREE independent detection layers:
  * 1. OnColorsChangedListener (API 27+) — fastest, fires on wallpaper color changes
  * 2. ACTION_WALLPAPER_CHANGED BroadcastReceiver — reliable system broadcast
- * 3. Periodic wallpaper ID polling (every 3s) — last-resort safety net
+ * 3. Periodic wallpaper ID polling (every 2s) — last-resort safety net
  */
 class WallpaperLockService : Service() {
 
@@ -61,12 +61,47 @@ class WallpaperLockService : Service() {
     private val enforcementMutex = Mutex()
     private var pollingRunnable: Runnable? = null
 
+    @Volatile
+    private var cachedHomeBitmap: android.graphics.Bitmap? = null
+    @Volatile
+    private var cachedLockBitmap: android.graphics.Bitmap? = null
+
+    fun clearBitmapCache() {
+        cachedHomeBitmap = null
+        cachedLockBitmap = null
+    }
+
+    private fun getOrDecodeHomeBitmap(file: File): android.graphics.Bitmap? {
+        val cached = cachedHomeBitmap
+        if (cached != null && !cached.isRecycled) return cached
+        return try {
+            BitmapFactory.decodeFile(file.absolutePath)?.also { cachedHomeBitmap = it }
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to decode home bitmap from ${file.absolutePath}", e)
+            null
+        }
+    }
+
+    private fun getOrDecodeLockBitmap(file: File): android.graphics.Bitmap? {
+        val cached = cachedLockBitmap
+        if (cached != null && !cached.isRecycled) return cached
+        return try {
+            BitmapFactory.decodeFile(file.absolutePath)?.also { cachedLockBitmap = it }
+        } catch (e: Throwable) {
+            Log.e(TAG, "Failed to decode lock bitmap from ${file.absolutePath}", e)
+            null
+        }
+    }
+
     companion object {
+        @Volatile
+        private var instance: WallpaperLockService? = null
+
         @Volatile
         private var selfUpdateUntilTimestamp: Long = 0L
 
-        /** Marks that WallShare is performing a wallpaper change, so color change events within [durationMs] are ignored */
-        fun armSelfUpdateWindow(durationMs: Long = 5000L) {
+        /** Marks that WallShare is performing a friend wallpaper change, so events within [durationMs] are ignored */
+        fun armSelfUpdateWindow(durationMs: Long = 2000L) {
             val newUntil = SystemClock.elapsedRealtime() + durationMs
             if (newUntil > selfUpdateUntilTimestamp) {
                 selfUpdateUntilTimestamp = newUntil
@@ -74,7 +109,7 @@ class WallpaperLockService : Service() {
             Log.d(TAG, "Self-update window armed for ${durationMs}ms (until=$selfUpdateUntilTimestamp)")
         }
 
-        /** Checks if a color change event occurred during a self-applied wallpaper window */
+        /** Checks if a color change event occurred during an incoming friend wallpaper window */
         fun isSelfUpdateActive(): Boolean {
             val now = SystemClock.elapsedRealtime()
             val active = now < selfUpdateUntilTimestamp
@@ -82,6 +117,10 @@ class WallpaperLockService : Service() {
                 Log.d(TAG, "Self-update active (${selfUpdateUntilTimestamp - now}ms remaining) — allowing through")
             }
             return active
+        }
+
+        fun invalidateBitmapCache() {
+            instance?.clearBitmapCache()
         }
 
         /** Starts the Enforcer Foreground Service */
@@ -176,6 +215,7 @@ class WallpaperLockService : Service() {
                     val lockId = wm.getWallpaperId(WallpaperManager.FLAG_LOCK)
                     if (lockId != -1) vault.saveLastAppliedLockId(lockId)
                 }
+                invalidateBitmapCache()
                 Log.i(TAG, "Self-applied wallpaper synced with lock vault (which=$which)")
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to sync self-applied wallpaper to vault", e)
@@ -185,6 +225,7 @@ class WallpaperLockService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         vault = WallpaperLockVault(applicationContext)
         wallpaperManager = WallpaperManager.getInstance(applicationContext)
 
@@ -254,6 +295,8 @@ class WallpaperLockService : Service() {
         stopWallpaperIdPolling()
         unregisterWallpaperChangedReceiver()
         unregisterWallpaperListener()
+        clearBitmapCache()
+        if (instance == this) instance = null
         serviceScope.cancel()
 
         if (vault.isLockActive()) {
@@ -368,20 +411,18 @@ class WallpaperLockService : Service() {
             if (lastSysId != -1 && curSysId != -1 && curSysId != lastSysId) {
                 whichChanged = whichChanged or WallpaperManager.FLAG_SYSTEM
             } else if (lastSysId == -1 && curSysId != -1) {
-                // Seed initial ID
                 vault.saveLastAppliedSystemId(curSysId)
             }
 
             if (lastLockId != -1 && curLockId != -1 && curLockId != lastLockId) {
                 whichChanged = whichChanged or WallpaperManager.FLAG_LOCK
             } else if (lastLockId == -1 && curLockId != -1) {
-                // Seed initial ID
                 vault.saveLastAppliedLockId(curLockId)
             }
 
             if (whichChanged != 0) {
                 Log.w(TAG, "Polling detected wallpaper ID mismatch! sys(stored=$lastSysId, current=$curSysId) lock(stored=$lastLockId, current=$curLockId)")
-                checkAndEnforceWallpaper(whichChanged, "id_poll")
+                enforceLockedWallpaper(whichChanged)
             }
         } catch (e: Exception) {
             Log.w(TAG, "Error during wallpaper ID poll", e)
@@ -395,37 +436,48 @@ class WallpaperLockService : Service() {
             return
         }
 
-        // If WallShare is currently applying a wallpaper or within the settling window, allow it through
+        // If WallShare is currently applying an incoming wallpaper from a friend, allow it through
         if (isSelfUpdateActive()) {
-            Log.d(TAG, "Wallpaper change was self-applied by WallShare ($triggerReason, which=$which) — allowing update through")
-            // Update stored IDs so polling doesn't detect stale mismatch after self-update settles
-            if (triggerReason != "id_poll") {
-                mainHandler.postDelayed({
-                    try {
-                        val newSysId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
-                        val newLockId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
-                        if (newSysId != -1) vault.saveLastAppliedSystemId(newSysId)
-                        if (newLockId != -1) vault.saveLastAppliedLockId(newLockId)
-                        Log.d(TAG, "Post-self-update IDs synced: sys=$newSysId, lock=$newLockId")
-                    } catch (e: Exception) {
-                        Log.w(TAG, "Failed to sync post-self-update IDs", e)
-                    }
-                }, 1500L)
-            }
+            Log.d(TAG, "Incoming friend update in progress ($triggerReason, which=$which) — allowing through")
             return
         }
 
-        // Otherwise, it is an UNAUTHORIZED manual change by the user! Revert immediately!
-        Log.w(TAG, "⚠ UNAUTHORIZED wallpaper change detected ($triggerReason, which=$which)! Enforcing locked wallpaper...")
-        enforceLockedWallpaper(which)
+        val curSysId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+        val curLockId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
+        val lastSysId = vault.getLastAppliedSystemId()
+        val lastLockId = vault.getLastAppliedLockId()
+
+        var whichToEnforce = 0
+        if (lastSysId != -1 && curSysId != -1 && curSysId != lastSysId) {
+            whichToEnforce = whichToEnforce or WallpaperManager.FLAG_SYSTEM
+        }
+        if (lastLockId != -1 && curLockId != -1 && curLockId != lastLockId) {
+            whichToEnforce = whichToEnforce or WallpaperManager.FLAG_LOCK
+        }
+
+        // If the current IDs already match the vault, this event was our own setBitmap
+        // or a harmless callback — do NOT loop or re-revert
+        if (whichToEnforce == 0 && lastSysId != -1 && lastLockId != -1) {
+            Log.d(TAG, "Wallpaper IDs match locked vault (sys=$curSysId, lock=$curLockId) — no revert needed ($triggerReason)")
+            return
+        }
+
+        val finalWhich = if (whichToEnforce != 0) whichToEnforce else which
+        Log.w(TAG, "⚠ UNAUTHORIZED wallpaper change detected ($triggerReason, which=$which, target=$finalWhich)! Enforcing locked wallpaper...")
+        enforceLockedWallpaper(finalWhich)
     }
 
     private fun enforceLockedWallpaper(whichToEnforce: Int = WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK) {
         serviceScope.launch {
             enforcementMutex.withLock {
-                // If a self-update was armed while waiting for the lock, do not revert
+                if (!vault.isLockActive()) {
+                    Log.d(TAG, "Lock inactive upon acquiring enforcement mutex — skipping revert")
+                    return@launch
+                }
+
+                // If a friend wallpaper is actively being downloaded/applied right now by WallShare, don't interrupt it
                 if (isSelfUpdateActive()) {
-                    Log.d(TAG, "Self-update active upon acquiring enforcement mutex — skipping revert")
+                    Log.d(TAG, "Incoming friend update actively in progress — skipping revert")
                     return@launch
                 }
 
@@ -442,23 +494,18 @@ class WallpaperLockService : Service() {
                     val homeFile = lockedFiles.homeFile
                     val lockFile = lockedFiles.lockFile
 
-                    Log.d(TAG, "Locked files: home=${homeFile?.absolutePath ?: "NONE"} (${homeFile?.length() ?: 0}B), lock=${lockFile?.absolutePath ?: "NONE"} (${lockFile?.length() ?: 0}B)")
-
                     if (homeFile == null && lockFile == null) {
                         Log.e(TAG, "CRITICAL: No locked wallpaper files available! Cannot enforce.")
                         return@launch
                     }
 
-                    // Arm window for 5s so our own revert does not re-trigger enforcement or loop
-                    // (needs to cover setBitmap + trailing OnColorsChanged + next poll cycle)
-                    armSelfUpdateWindow(5000L)
-
                     var targetWhich = whichToEnforce
+                    val curSysId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+                    val curLockId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
+                    val lastSysId = vault.getLastAppliedSystemId()
+                    val lastLockId = vault.getLastAppliedLockId()
+
                     if (targetWhich == 0) {
-                        val curSysId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
-                        val curLockId = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
-                        val lastSysId = vault.getLastAppliedSystemId()
-                        val lastLockId = vault.getLastAppliedLockId()
                         if (lastSysId != -1 && curSysId != lastSysId) {
                             targetWhich = targetWhich or WallpaperManager.FLAG_SYSTEM
                         }
@@ -473,37 +520,57 @@ class WallpaperLockService : Service() {
                     val enforceHome = (targetWhich and WallpaperManager.FLAG_SYSTEM) != 0
                     val enforceLock = (targetWhich and WallpaperManager.FLAG_LOCK) != 0
 
-                    if (enforceHome && enforceLock && homeFile != null && lockFile != null && homeFile.absolutePath == lockFile.absolutePath) {
-                        val bitmap = BitmapFactory.decodeFile(homeFile.absolutePath)
-                        if (bitmap != null) {
-                            val targets = WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
-                            wallpaperManager.setBitmap(bitmap, null, true, targets)
-                            vault.saveLastAppliedSystemId(wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM))
-                            vault.saveLastAppliedLockId(wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK))
-                            Log.i(TAG, "Locked wallpaper restored to both screens against unauthorized manual change!")
-                        }
-                    } else {
-                        // Revert screens independently with their respective wallpapers!
-                        if (enforceHome && homeFile != null && homeFile.exists() && homeFile.length() > 0L) {
-                            val homeBitmap = BitmapFactory.decodeFile(homeFile.absolutePath)
-                            if (homeBitmap != null) {
-                                wallpaperManager.setBitmap(homeBitmap, null, true, WallpaperManager.FLAG_SYSTEM)
-                                vault.saveLastAppliedSystemId(wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM))
-                                Log.i(TAG, "Locked HOME wallpaper restored successfully against unauthorized manual change!")
-                            } else {
-                                Log.e(TAG, "Failed to decode locked home wallpaper file: ${homeFile.absolutePath}")
+                    // Loop up to 3 times: guarantees that rapid consecutive overwrites are immediately caught and reverted
+                    var attempts = 0
+                    var verified = false
+
+                    while (attempts < 3 && !verified) {
+                        attempts++
+
+                        if (enforceHome && enforceLock && homeFile != null && lockFile != null && homeFile.absolutePath == lockFile.absolutePath) {
+                            val bitmap = getOrDecodeHomeBitmap(homeFile)
+                            if (bitmap != null) {
+                                val targets = WallpaperManager.FLAG_SYSTEM or WallpaperManager.FLAG_LOCK
+                                wallpaperManager.setBitmap(bitmap, null, true, targets)
+                                val newSys = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+                                val newLock = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
+                                if (newSys != -1) vault.saveLastAppliedSystemId(newSys)
+                                if (newLock != -1) vault.saveLastAppliedLockId(newLock)
+                                Log.i(TAG, "Locked wallpaper restored to both screens (attempt $attempts, sys=$newSys, lock=$newLock)")
+                            }
+                        } else {
+                            if (enforceHome && homeFile != null && homeFile.exists() && homeFile.length() > 0L) {
+                                val homeBitmap = getOrDecodeHomeBitmap(homeFile)
+                                if (homeBitmap != null) {
+                                    wallpaperManager.setBitmap(homeBitmap, null, true, WallpaperManager.FLAG_SYSTEM)
+                                    val newSys = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+                                    if (newSys != -1) vault.saveLastAppliedSystemId(newSys)
+                                    Log.i(TAG, "Locked HOME wallpaper restored (attempt $attempts, sys=$newSys)")
+                                }
+                            }
+
+                            if (enforceLock && lockFile != null && lockFile.exists() && lockFile.length() > 0L) {
+                                val lockBitmap = getOrDecodeLockBitmap(lockFile)
+                                if (lockBitmap != null) {
+                                    wallpaperManager.setBitmap(lockBitmap, null, true, WallpaperManager.FLAG_LOCK)
+                                    val newLock = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
+                                    if (newLock != -1) vault.saveLastAppliedLockId(newLock)
+                                    Log.i(TAG, "Locked LOCK wallpaper restored (attempt $attempts, lock=$newLock)")
+                                }
                             }
                         }
 
-                        if (enforceLock && lockFile != null && lockFile.exists() && lockFile.length() > 0L) {
-                            val lockBitmap = BitmapFactory.decodeFile(lockFile.absolutePath)
-                            if (lockBitmap != null) {
-                                wallpaperManager.setBitmap(lockBitmap, null, true, WallpaperManager.FLAG_LOCK)
-                                vault.saveLastAppliedLockId(wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK))
-                                Log.i(TAG, "Locked LOCK wallpaper restored successfully against unauthorized manual change!")
-                            } else {
-                                Log.e(TAG, "Failed to decode locked lock wallpaper file: ${lockFile.absolutePath}")
-                            }
+                        // Immediate post-revert verification check
+                        val verifySys = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_SYSTEM)
+                        val verifyLock = wallpaperManager.getWallpaperId(WallpaperManager.FLAG_LOCK)
+                        val sysOk = !enforceHome || (verifySys != -1 && verifySys == vault.getLastAppliedSystemId())
+                        val lockOk = !enforceLock || (verifyLock != -1 && verifyLock == vault.getLastAppliedLockId())
+
+                        if (sysOk && lockOk) {
+                            verified = true
+                            Log.i(TAG, "Wallpaper lock enforcement successfully verified on screen!")
+                        } else {
+                            Log.w(TAG, "Immediate overwrite detected during enforcement (sysOk=$sysOk, lockOk=$lockOk). Retrying enforcement...")
                         }
                     }
                 } catch (e: Exception) {
